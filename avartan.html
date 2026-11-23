@@ -30,6 +30,11 @@
   .top { display: flex; align-items: center; gap: 10px; margin: 2px 2px 8px; }
   h1 { font-size: 16px; margin: 0; }
   h1 small { color: var(--muted); font-size: 12px; font-weight: 500; margin-left: 6px; }
+  /* zen mode: only the player bar, status, matra boxes and beat view */
+  body.zen .cfg, body.zen .custom.show, body.zen details, body.zen .top small,
+  body.zen .player-bar .sec-name { display: none; }
+  body.zen .player-bar { margin-top: 0; padding-top: 0; border-top: none; }
+  .zen-btn { height: 28px; }
   .help-btn { width: 28px; height: 28px; padding: 0; border-radius: 50%; font-weight: 800; font-size: 14px; color: var(--accent); }
 
   /* ---------- help dialog ---------- */
@@ -165,12 +170,13 @@
   <div class="top">
     <h1><span>Avartan</span><small>Taal Practice Player</small></h1>
     <span class="spacer"></span>
+    <button class="zen-btn" id="zenBtn" title="Zen mode: show only the player (Z)">Zen</button>
     <button class="help-btn" id="helpBtn" title="How to use Avartan (?)" aria-label="Help">?</button>
   </div>
 
   <section class="panel">
     <!-- TAAL: recording, taal and laya -->
-    <div class="bar">
+    <div class="bar cfg">
       <span class="sec-name">Taal</span>
       <input type="file" id="file" accept="audio/*" hidden>
       <label title="Pick a stock track, or open / drop your own recording">Track
@@ -206,7 +212,7 @@
     </div>
 
     <!-- BANDISH: where it starts and the tihais -->
-    <div class="bar">
+    <div class="bar cfg">
       <span class="sec-name">Bandish</span>
       <label>Starts on matra
         <select id="bMatra" title="Matra the bandish starts on (marked in every avartan)"></select>
@@ -215,7 +221,7 @@
     </div>
 
     <!-- PLAYER: transport and display -->
-    <div class="bar">
+    <div class="bar player-bar">
       <span class="sec-name">Player</span>
       <button class="primary" id="playBtn" disabled>Play</button>
       <span class="grp">
@@ -273,7 +279,7 @@
   <details>
     <summary>Shortcuts</summary>
     <kbd>Space</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd> ±2 s · <kbd>Shift</kbd>+<kbd>←</kbd>/<kbd>→</kbd> ±1 avartan ·
-    <kbd>B</kbd> back to the bandish start · <kbd>P</kbd> repeat track · <kbd>↑</kbd>/<kbd>↓</kbd> volume · <kbd>M</kbd> matra boxes · <kbd>W</kbd> waveform · <kbd>S</kbd> mark avartan 1 sam · <kbd>R</kbd> re-sync nearest sam to now (keeps numbering) ·
+    <kbd>B</kbd> back to the bandish start · <kbd>P</kbd> repeat track · <kbd>↑</kbd>/<kbd>↓</kbd> volume · <kbd>M</kbd> matra boxes · <kbd>W</kbd> waveform · <kbd>Z</kbd> zen mode · <kbd>S</kbd> mark avartan 1 sam · <kbd>R</kbd> re-sync nearest sam to now (keeps numbering) ·
     <kbd>[</kbd>/<kbd>]</kbd> nudge sam ∓10 ms · <kbd>-</kbd>/<kbd>=</kbd> BPM ∓0.1 · <kbd>T</kbd> tap · <kbd>L</kbd> loop · <kbd>?</kbd> help.
     Click a matra box to jump to it. Settings are remembered per audio file.
   </details>
@@ -1013,6 +1019,14 @@ function setRepeat(on) {
   $('repeatBtn').classList.toggle('on', on);
   save();
 }
+// Zen mode is a page-wide preference, not a per-track setting
+function setZen(on) {
+  document.body.classList.toggle('zen', on);
+  $('zenBtn').classList.toggle('on', on);
+  $('zenBtn').textContent = on ? 'Exit zen' : 'Zen';
+  store('taal:zen', on);
+  window.dispatchEvent(new Event('resize'));
+}
 function setView(grid, wave) {
   S.showGrid = grid; S.showWave = wave;
   document.body.classList.toggle('no-grid', !grid);
@@ -1149,6 +1163,8 @@ $('volume').addEventListener('input', e => setVolume(Number(e.target.value)));
 $('volume').addEventListener('change', e => e.target.blur());
 $('gridBtn').addEventListener('click', () => setView(!S.showGrid, S.showWave));
 $('waveBtn').addEventListener('click', () => setView(S.showGrid, !S.showWave));
+$('zenBtn').addEventListener('click', () => setZen(!document.body.classList.contains('zen')));
+setZen(load('taal:zen') === true);
 $('loopCount').addEventListener('change', refreshLoop);
 $('backAv').addEventListener('click', () => shiftAvartan(-1));
 $('fwdAv').addEventListener('click', () => shiftAvartan(1));
@@ -1213,6 +1229,7 @@ window.addEventListener('keydown', e => {
     case 'ArrowDown': e.preventDefault(); setVolume(S.volume - 0.05); break;
     case 'm': case 'M': setView(!S.showGrid, S.showWave); break;
     case 'w': case 'W': setView(S.showGrid, !S.showWave); break;
+    case 'z': case 'Z': setZen(!document.body.classList.contains('zen')); break;
   }
 });
 
