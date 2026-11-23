@@ -428,7 +428,7 @@ const TAALS = {
 // ---------------------------------------------------------------------------
 const STOCK = [
   { file: 'Kaushik_Dhwani_Teen_Taal.mp3', title: 'Kaushik Dhwani · Teentaal', preset: { taal: 'teentaal' } },
-  { file: 'Kaushik_Dhwani_Vilambit_Ektal.mp3', title: 'Kaushik Dhwani · Vilambit Ektaal', preset: { taal: 'vilambitektaal', bpm: 15 } },
+  { file: 'Kaushik_Dhwani_Vilambit_Ektal.mp3', title: 'Kaushik Dhwani · Vilambit Ektaal', preset: { taal: 'vilambitektaal', bpm: 15, subdiv: 4 } },
 ];
 
 // ---------------------------------------------------------------------------
@@ -439,7 +439,7 @@ const audio = $('audio');
 // offset = time (s) of avartan 1's sam; bMatra = matra the bandish starts on (every avartan)
 // bpm = tempo of the recording; targetBpm = practice tempo (null = same as bpm); speed follows target / bpm
 const DEFAULTS = { taal: 'teentaal', bpm: 80, targetBpm: null, offset: 0, bMatra: 1, subdiv: 1, clickMode: 'off',
-                   winAv: 2, volume: 1, repeat: false, showGrid: false, showWave: false, custom: { vibhags: '4+4+4+4', marks: 'X 2 0 3', bols: '' } };
+                   winAv: 2, volume: 1, repeat: true, showGrid: false, showWave: false, custom: { vibhags: '4+4+4+4', marks: 'X 2 0 3', bols: '' } };
 let S = structuredClone(DEFAULTS);
 let fileKey = null;
 
