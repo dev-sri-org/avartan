@@ -572,6 +572,7 @@ let loadSeq = 0;
 async function loadSource({ key, url, getBytes, preset }) {
   const seq = ++loadSeq;   // a newer load cancels the result of an older one
   ensureCtx();
+  noWaveFromDisk = false;
   $('drop').textContent = 'Loading…';
   $('drop').classList.remove('hidden');
   $('playBtn').disabled = true;
@@ -615,10 +616,19 @@ async function loadSource({ key, url, getBytes, preset }) {
     if (seq !== loadSeq) return;
     // Browsers block reading files next to a page opened straight from disk (file://).
     // The track still plays through the audio element; only the waveform is missing.
-    $('drop').textContent = location.protocol === 'file:'
-      ? 'Playing without the waveform: the browser does not let a page opened from disk read files beside it. Open your own file instead, or serve this folder (e.g. python -m http.server) to see the waveform.'
-      : 'Could not decode this file: ' + err.message;
+    if (location.protocol === 'file:') {
+      $('drop').textContent = 'Playing without the waveform: the browser does not let a page opened from disk read files beside it. Open your own file instead, or serve this folder (e.g. python -m http.server) to see the waveform.';
+      noWaveFromDisk = true;
+      syncDropNotice();
+    } else {
+      $('drop').textContent = 'Could not decode this file: ' + err.message;
+    }
   }
+}
+// The "no waveform from disk" notice only matters while the waveform is shown.
+let noWaveFromDisk = false;
+function syncDropNotice() {
+  if (noWaveFromDisk) $('drop').classList.toggle('hidden', !S.showWave);
 }
 
 // Track list: stock tracks, then (once opened) the user's own file
@@ -1008,6 +1018,7 @@ function setView(grid, wave) {
   document.body.classList.toggle('no-grid', !grid);
   $('gridBtn').classList.toggle('on', grid);
   $('waveBtn').classList.toggle('on', wave);
+  syncDropNotice();
   save();
 }
 function shiftAvartan(dir) {
