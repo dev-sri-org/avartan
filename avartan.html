@@ -34,7 +34,11 @@
   body.zen .cfg, body.zen .custom.show, body.zen details, body.zen .top small,
   body.zen .player-bar .sec-name { display: none; }
   body.zen .player-bar { margin-top: 0; padding-top: 0; border-top: none; }
-  .zen-btn { height: 28px; }
+  .zen-btn { width: 28px; height: 28px; padding: 0; border-radius: 50%; color: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center; }
+  .zen-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .zen-btn .ic-exit, body.zen .zen-btn .ic-enter { display: none; }
+  body.zen .zen-btn .ic-exit { display: block; }
   .help-btn { width: 28px; height: 28px; padding: 0; border-radius: 50%; font-weight: 800; font-size: 14px; color: var(--accent); }
 
   /* ---------- help dialog ---------- */
@@ -170,7 +174,10 @@
   <div class="top">
     <h1><span>Avartan</span><small>Taal Practice Player</small></h1>
     <span class="spacer"></span>
-    <button class="zen-btn" id="zenBtn" title="Zen mode: show only the player (Z)">Zen</button>
+    <button class="zen-btn" id="zenBtn" title="Zen mode: show only the player (Z)" aria-label="Zen mode" aria-pressed="false">
+      <svg class="ic-enter" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      <svg class="ic-exit" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+    </button>
     <button class="help-btn" id="helpBtn" title="How to use Avartan (?)" aria-label="Help">?</button>
   </div>
 
@@ -1023,7 +1030,8 @@ function setRepeat(on) {
 function setZen(on) {
   document.body.classList.toggle('zen', on);
   $('zenBtn').classList.toggle('on', on);
-  $('zenBtn').textContent = on ? 'Exit zen' : 'Zen';
+  $('zenBtn').setAttribute('aria-pressed', on);
+  $('zenBtn').title = on ? 'Exit zen mode: show all settings (Z)' : 'Zen mode: show only the player (Z)';
   store('taal:zen', on);
   window.dispatchEvent(new Event('resize'));
 }
