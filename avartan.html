@@ -1,9 +1,9 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Avartan â€“ Taal Practice Player</title>
+<title>Avartan – Taal Practice Player</title>
 <style>
   :root {
     --bg: #15120e;
@@ -176,7 +176,7 @@
       <label title="Pick a stock track, or open / drop your own recording">Track
         <span class="grp">
           <select id="trackSel" class="track"></select>
-          <button id="openBtn" title="Open your own audio file (or drop it on the page)">ðŸ“‚ Your ownâ€¦</button>
+          <button id="openBtn" title="Open your own audio file (or drop it on the page)">📂 Your own…</button>
         </span>
       </label>
       <label>Taal <select id="taalSel"></select></label>
@@ -184,9 +184,9 @@
         <span class="grp"><input type="number" id="bpm" min="10" max="800" step="0.1" value="80"><button id="tapBtn" title="Tap tempo: tap this button (or T) on every matra while the audio plays; after 3 taps the original BPM is set from your tapping">Tap</button></span>
       </label>
       <label title="Tempo you want to practise at; playback speed follows">Target BPM
-        <span class="grp"><input type="number" id="targetBpm" min="10" max="800" step="0.1" value="80"><button id="resetTarget" title="Back to the original tempo">â†º</button></span>
+        <span class="grp"><input type="number" id="targetBpm" min="10" max="800" step="0.1" value="80"><button id="resetTarget" title="Back to the original tempo">↺</button></span>
       </label>
-      <span class="speed-out" id="speedOut" title="Playback speed = target Ã· original">1.00Ã—</span>
+      <span class="speed-out" id="speedOut" title="Playback speed = target ÷ original">1.00×</span>
       <label>Divisions
         <select id="subdiv">
           <option value="1">1</option><option value="2">2</option><option value="3">3</option>
@@ -219,12 +219,12 @@
       <span class="sec-name">Player</span>
       <button class="primary" id="playBtn" disabled>Play</button>
       <span class="grp">
-        <button id="backAv" title="Previous avartan (Shift+â†)">â®</button>
-        <button id="fwdAv" title="Next avartan (Shift+â†’)">â­</button>
-        <button id="toBandish" title="Back to the bandish start (B)">â‡¤ Bandish</button>
+        <button id="backAv" title="Previous avartan (Shift+←)">⏮</button>
+        <button id="fwdAv" title="Next avartan (Shift+→)">⏭</button>
+        <button id="toBandish" title="Back to the bandish start (B)">⇤ Bandish</button>
       </span>
       <span class="time" id="time">0:00.00 / 0:00</span>
-      <button id="repeatBtn" title="Repeat the whole track continuously (P)">âŸ³ Repeat</button>
+      <button id="repeatBtn" title="Repeat the whole track continuously (P)">⟳ Repeat</button>
       <span class="grp">
         <button id="loopBtn" title="Loop the current avartan(s) (L)">Loop av</button>
         <select id="loopCount" title="Avartans to loop"><option>1</option><option>2</option><option>4</option></select>
@@ -237,7 +237,7 @@
       </label>
       <label>View
         <select id="winAv" title="Avartans visible in the beat view">
-          <option value="0.5">Â½ av</option><option value="1">1 av</option><option value="2" selected>2 av</option>
+          <option value="0.5">½ av</option><option value="1">1 av</option><option value="2" selected>2 av</option>
           <option value="3">3 av</option><option value="4">4 av</option>
         </select>
       </label>
@@ -245,17 +245,17 @@
         <button id="gridBtn" title="Show / hide the matra boxes (M)">Matras</button>
         <button id="waveBtn" title="Show / hide the audio waveform; beat lines keep scrolling (W)">Waveform</button>
       </span>
-      <label class="vol" title="Volume (â†‘/â†“)">ðŸ”Š <input type="range" id="volume" min="0" max="1" step="0.01" value="1"></label>
+      <label class="vol" title="Volume (↑/↓)">🔊 <input type="range" id="volume" min="0" max="1" step="0.01" value="1"></label>
     </div>
   </section>
 
   <!-- Taal visual -->
   <section class="panel" id="taalPanel">
     <div class="status">
-      <span class="muted av">Av <b id="avNum">â€“</b> Â· <span id="taalName"></span> Â· <span id="bpmInfo"></span></span>
-      <div class="now"><span class="big" id="matraNum">â€“</span><span class="bol" id="matraBol"></span></div>
-      <span class="pill bd" id="bdCountdown">Bandish in <b>â€“</b></span>
-      <span class="pill" id="countdown">Sam in <b>â€“</b></span>
+      <span class="muted av">Av <b id="avNum">–</b> · <span id="taalName"></span> · <span id="bpmInfo"></span></span>
+      <div class="now"><span class="big" id="matraNum">–</span><span class="bol" id="matraBol"></span></div>
+      <span class="pill bd" id="bdCountdown">Bandish in <b>–</b></span>
+      <span class="pill" id="countdown">Sam in <b>–</b></span>
     </div>
     <div class="taal" id="taal"></div>
     <div class="avbar"><div id="avProgress"></div></div>
@@ -266,35 +266,35 @@
     <div class="waves">
       <canvas id="detail"></canvas>
       <canvas id="overview"></canvas>
-      <div class="drop" id="drop">Choose a stock track, or open / drop your own recording (mp3, wav, m4aâ€¦)</div>
+      <div class="drop" id="drop">Choose a stock track, or open / drop your own recording (mp3, wav, m4a…)</div>
     </div>
   </section>
 
   <details>
     <summary>Shortcuts</summary>
-    <kbd>Space</kbd> play/pause Â· <kbd>â†</kbd>/<kbd>â†’</kbd> Â±2 s Â· <kbd>Shift</kbd>+<kbd>â†</kbd>/<kbd>â†’</kbd> Â±1 avartan Â·
-    <kbd>B</kbd> back to the bandish start Â· <kbd>P</kbd> repeat track Â· <kbd>â†‘</kbd>/<kbd>â†“</kbd> volume Â· <kbd>M</kbd> matra boxes Â· <kbd>W</kbd> waveform Â· <kbd>S</kbd> mark avartan 1 sam Â· <kbd>R</kbd> re-sync nearest sam to now (keeps numbering) Â·
-    <kbd>[</kbd>/<kbd>]</kbd> nudge sam âˆ“10 ms Â· <kbd>-</kbd>/<kbd>=</kbd> BPM âˆ“0.1 Â· <kbd>T</kbd> tap Â· <kbd>L</kbd> loop Â· <kbd>?</kbd> help.
+    <kbd>Space</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd> ±2 s · <kbd>Shift</kbd>+<kbd>←</kbd>/<kbd>→</kbd> ±1 avartan ·
+    <kbd>B</kbd> back to the bandish start · <kbd>P</kbd> repeat track · <kbd>↑</kbd>/<kbd>↓</kbd> volume · <kbd>M</kbd> matra boxes · <kbd>W</kbd> waveform · <kbd>S</kbd> mark avartan 1 sam · <kbd>R</kbd> re-sync nearest sam to now (keeps numbering) ·
+    <kbd>[</kbd>/<kbd>]</kbd> nudge sam ∓10 ms · <kbd>-</kbd>/<kbd>=</kbd> BPM ∓0.1 · <kbd>T</kbd> tap · <kbd>L</kbd> loop · <kbd>?</kbd> help.
     Click a matra box to jump to it. Settings are remembered per audio file.
   </details>
 </main>
 
 <dialog id="help" aria-labelledby="helpTitle">
   <div class="help-head">
-    <h2 id="helpTitle"><span>Avartan</span> Â· How to use</h2>
-    <button id="helpClose" title="Close (Esc)">âœ• Close</button>
+    <h2 id="helpTitle"><span>Avartan</span> · How to use</h2>
+    <button id="helpClose" title="Close (Esc)">✕ Close</button>
   </div>
   <div class="help-body">
     <p>Avartan lays a taal cycle over any recording (a tabla theka, a lehra, or a performance) so you can see where you are
       in the cycle, know when sam and the bandish are coming, and practise at your own tempo.</p>
 
-    <h3>1 Â· Get started</h3>
+    <h3>1 · Get started</h3>
     <ol>
       <li><b>Choose a recording.</b> Pick one of the <b>stock tracks</b> from the <b>Track</b> list, or use your own: click
-        <b>ðŸ“‚ Your ownâ€¦</b> (or "Open a fileâ€¦" in the list), or drag an mp3 / wav / m4a / ogg / flac file onto the page.
+        <b>📂 Your own…</b> (or "Open a file…" in the list), or drag an mp3 / wav / m4a / ogg / flac file onto the page.
         Stock tracks may come with the taal already set; the last stock track you used opens automatically next time.</li>
       <li><b>Pick the taal</b> from the <b>Taal</b> list: Teentaal, Ektaal, Vilambit Ektaal, Jhaptaal, Rupak, and others. For anything else, choose
-        <b>Customâ€¦</b> (see below).</li>
+        <b>Custom…</b> (see below).</li>
       <li><b>Set the Original BPM</b>, the tempo the recording was played at (matras per minute). If you don't know it, play
         the audio and tap <b>Tap</b> (or press <kbd>T</kbd>) on every matra. After 3 taps the BPM is filled in.</li>
       <li><b>Mark sam.</b> Play the recording and press <b>Mark sam</b> (or <kbd>S</kbd>) right on the first sam. That moment
@@ -302,7 +302,7 @@
       <li>Press <b>Play</b> (<kbd>Space</kbd>). The matra boxes, countdowns and beat view now follow the music.</li>
     </ol>
 
-    <h3>2 Â· Fine-tune the alignment</h3>
+    <h3>2 · Fine-tune the alignment</h3>
     <p>If the grid slowly drifts away from the music, the BPM is slightly off. If it is off by a constant amount, sam is slightly off.</p>
     <ul>
       <li><kbd>-</kbd> / <kbd>=</kbd>: lower or raise the original BPM by 0.1 to fix drift.</li>
@@ -312,22 +312,22 @@
     </ul>
     <div class="tip">Settings are remembered <b>per audio file</b>. Open the same file again and your taal, BPM, sam and bandish come back.</div>
 
-    <h3>3 Â· Practise slower (or faster)</h3>
-    <p>Set <b>Target BPM</b> to the tempo you want to practise at. Playback speed = target Ã· original (shown next to it, e.g.
-      <b>0.75Ã—</b>). The beat grid scales with it, so everything stays aligned. <b>â†º</b> goes back to the original tempo.</p>
+    <h3>3 · Practise slower (or faster)</h3>
+    <p>Set <b>Target BPM</b> to the tempo you want to practise at. Playback speed = target ÷ original (shown next to it, e.g.
+      <b>0.75×</b>). The beat grid scales with it, so everything stays aligned. <b>↺</b> goes back to the original tempo.</p>
 
-    <h3>4 Â· Bandish and tihais</h3>
+    <h3>4 · Bandish and tihais</h3>
     <p>Choose the matra your bandish (composition) starts on in <b>Starts on matra</b>. Avartan then:</p>
     <ul>
       <li>marks that matra with a <span class="k-bd">B</span> in the matra boxes,</li>
       <li>shows a <span class="k-bd">Bandish in N</span> countdown,</li>
       <li>draws a <span class="k-bd">Bandish</span> flag in every avartan of the beat view, and</li>
-      <li>shows where a <b>3-matra tihai</b> (3 Ã— 3 matras) must start so that it lands on <span class="k-sam">sam</span> or on the
+      <li>shows where a <b>3-matra tihai</b> (3 × 3 matras) must start so that it lands on <span class="k-sam">sam</span> or on the
         <span class="k-bd">bandish</span> matra.</li>
     </ul>
-    <p><b>â‡¤ Bandish</b> (<kbd>B</kbd>) jumps back to the latest bandish start; press it again to go one more avartan back.</p>
+    <p><b>⇤ Bandish</b> (<kbd>B</kbd>) jumps back to the latest bandish start; press it again to go one more avartan back.</p>
 
-    <h3>5 Â· Reading the display</h3>
+    <h3>5 · Reading the display</h3>
     <table>
       <tr><td><b>Matra boxes</b></td><td>One box per matra, grouped by vibhag, each showing its tali mark, bol and number.
         <span class="k-sam">X</span> = sam, <span class="k-khali">0</span> = khali (blue shading). The current matra is lit; the
@@ -336,26 +336,26 @@
         <span class="k-bd">Bandish in</span> / <span class="k-sam">Sam in</span> countdowns (they glow in the last 3 matras). The
         panel flashes on every sam.</td></tr>
       <tr><td><b>Beat view</b></td><td>A scrolling timeline; the white line is the playhead. Strips from top to bottom:
-        <b>MATRA</b> (numbers, marks, bols) Â· <b>LAYA</b> (one block per division, current lit) Â· <b>BANDISH</b> Â·
-        <b>3-MATRA SAM TIHAI</b> Â· <b>3-MATRA BANDISH TIHAI</b> Â· <b>AUDIO</b> waveform. Click or drag on it to seek.</td></tr>
+        <b>MATRA</b> (numbers, marks, bols) · <b>LAYA</b> (one block per division, current lit) · <b>BANDISH</b> ·
+        <b>3-MATRA SAM TIHAI</b> · <b>3-MATRA BANDISH TIHAI</b> · <b>AUDIO</b> waveform. Click or drag on it to seek.</td></tr>
       <tr><td><b>Overview</b></td><td>The whole track, with sam ticks in red and bandish lines in green. The box shows the part
         visible above. Click or drag to seek anywhere.</td></tr>
     </table>
 
-    <h3>6 Â· Player controls</h3>
+    <h3>6 · Player controls</h3>
     <ul>
-      <li><b>â® / â­</b>: previous / next avartan (<kbd>Shift</kbd>+<kbd>â†</kbd>/<kbd>â†’</kbd>). <kbd>â†</kbd>/<kbd>â†’</kbd> move 2 s.</li>
-      <li><b>âŸ³ Repeat</b> (<kbd>P</kbd>): play the whole track over and over.</li>
+      <li><b>⏮ / ⏭</b>: previous / next avartan (<kbd>Shift</kbd>+<kbd>←</kbd>/<kbd>→</kbd>). <kbd>←</kbd>/<kbd>→</kbd> move 2 s.</li>
+      <li><b>⟳ Repeat</b> (<kbd>P</kbd>): play the whole track over and over.</li>
       <li><b>Loop av</b> (<kbd>L</kbd>): loop the current avartan, or 2 or 4 avartans (chosen in the list next to it), from sam to sam.</li>
-      <li><b>Divisions</b>: split each matra into 2, 3, 4, 6 or 8 parts (dugun, tigun, chaugunâ€¦) in the boxes and the beat view.</li>
+      <li><b>Divisions</b>: split each matra into 2, 3, 4, 6 or 8 parts (dugun, tigun, chaugun…) in the boxes and the beat view.</li>
       <li><b>Click</b>: a metronome on <b>Sam</b> only, on every <b>Vibhag</b>, or on <b>All matras</b>. Sam, khali and tali have different pitches.</li>
-      <li><b>View</b>: how many avartans fit in the beat view (Â½ to 4).</li>
+      <li><b>View</b>: how many avartans fit in the beat view (½ to 4).</li>
       <li><b>Matras</b> (<kbd>M</kbd>) / <b>Waveform</b> (<kbd>W</kbd>): show or hide the matra boxes or the audio strip.</li>
-      <li>ðŸ”Š Volume (<kbd>â†‘</kbd>/<kbd>â†“</kbd>).</li>
+      <li>🔊 Volume (<kbd>↑</kbd>/<kbd>↓</kbd>).</li>
     </ul>
 
-    <h3>7 Â· Custom taal</h3>
-    <p>Choose <b>Customâ€¦</b> and fill in three fields (picking Custom right after a preset copies that preset so you can tweak it):</p>
+    <h3>7 · Custom taal</h3>
+    <p>Choose <b>Custom…</b> and fill in three fields (picking Custom right after a preset copies that preset so you can tweak it):</p>
     <ul>
       <li><b>Vibhags</b>: matras per vibhag, e.g. <code>3+2+2</code> for 7 matras.</li>
       <li><b>Marks</b>: one per vibhag, <code>X</code> for sam, <code>0</code> for khali, numbers for tali, e.g. <code>X 2 3</code>.</li>
@@ -365,17 +365,17 @@
     <h3>Keyboard shortcuts</h3>
     <table>
       <tr><td><kbd>Space</kbd></td><td>Play / pause</td></tr>
-      <tr><td><kbd>â†</kbd> <kbd>â†’</kbd></td><td>Back / forward 2 s</td></tr>
-      <tr><td><kbd>Shift</kbd>+<kbd>â†</kbd> <kbd>â†’</kbd></td><td>Previous / next avartan</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Back / forward 2 s</td></tr>
+      <tr><td><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd></td><td>Previous / next avartan</td></tr>
       <tr><td><kbd>B</kbd></td><td>Back to the bandish start</td></tr>
-      <tr><td><kbd>L</kbd> Â· <kbd>P</kbd></td><td>Loop avartan(s) Â· repeat whole track</td></tr>
-      <tr><td><kbd>S</kbd> Â· <kbd>R</kbd></td><td>Mark avartan 1 sam Â· re-sync nearest sam to now</td></tr>
-      <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>Move sam âˆ’/+ 10 ms</td></tr>
-      <tr><td><kbd>-</kbd> <kbd>=</kbd></td><td>Original BPM âˆ’/+ 0.1</td></tr>
+      <tr><td><kbd>L</kbd> · <kbd>P</kbd></td><td>Loop avartan(s) · repeat whole track</td></tr>
+      <tr><td><kbd>S</kbd> · <kbd>R</kbd></td><td>Mark avartan 1 sam · re-sync nearest sam to now</td></tr>
+      <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>Move sam −/+ 10 ms</td></tr>
+      <tr><td><kbd>-</kbd> <kbd>=</kbd></td><td>Original BPM −/+ 0.1</td></tr>
       <tr><td><kbd>T</kbd></td><td>Tap tempo</td></tr>
-      <tr><td><kbd>â†‘</kbd> <kbd>â†“</kbd></td><td>Volume</td></tr>
-      <tr><td><kbd>M</kbd> Â· <kbd>W</kbd></td><td>Show / hide matra boxes Â· waveform</td></tr>
-      <tr><td><kbd>?</kbd> Â· <kbd>Esc</kbd></td><td>Open / close this help</td></tr>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Volume</td></tr>
+      <tr><td><kbd>M</kbd> · <kbd>W</kbd></td><td>Show / hide matra boxes · waveform</td></tr>
+      <tr><td><kbd>?</kbd> · <kbd>Esc</kbd></td><td>Open / close this help</td></tr>
     </table>
   </div>
 </dialog>
@@ -415,7 +415,7 @@ const TAALS = {
                 bols: 'Dha Dhi Na Dha Ti Na' },
   keherwa:    { name: 'Keherwa (8)',      vibhags: [4,4],         marks: 'X 0',
                 bols: 'Dha Ge Na Ti Na Ka Dhi Na' },
-  custom:     { name: 'Customâ€¦' },
+  custom:     { name: 'Custom…' },
 };
 
 // ---------------------------------------------------------------------------
@@ -423,11 +423,11 @@ const TAALS = {
 // To add one, copy the file next to avartan.html and add a line here.
 //   file:   file name (relative to this page)
 //   title:  what the user sees in the Track list
-//   preset: optional starting settings for the track (taal, bpm, offset, bMatraâ€¦);
+//   preset: optional starting settings for the track (taal, bpm, offset, bMatra…);
 //           once the user changes anything, their own settings for the track win
 // ---------------------------------------------------------------------------
 const STOCK = [
-  { file: 'Kaushik_Dhwani_Teen_Taal.mp3', title: 'Kaushik Dhwani Â· Teentaal', preset: { taal: 'teentaal' } },
+  { file: 'Kaushik_Dhwani_Teen_Taal.mp3', title: 'Kaushik Dhwani · Teentaal', preset: { taal: 'teentaal' } },
 ];
 
 // ---------------------------------------------------------------------------
@@ -571,7 +571,7 @@ let loadSeq = 0;
 async function loadSource({ key, url, getBytes, preset }) {
   const seq = ++loadSeq;   // a newer load cancels the result of an older one
   ensureCtx();
-  $('drop').textContent = 'Loadingâ€¦';
+  $('drop').textContent = 'Loading…';
   $('drop').classList.remove('hidden');
   $('playBtn').disabled = true;
   audio.pause();
@@ -623,10 +623,10 @@ async function loadSource({ key, url, getBytes, preset }) {
 // Track list: stock tracks, then (once opened) the user's own file
 function buildTrackList() {
   const sel = $('trackSel');
-  sel.innerHTML = '<option value="" disabled selected>Choose a trackâ€¦</option>' +
+  sel.innerHTML = '<option value="" disabled selected>Choose a track…</option>' +
     (STOCK.length ? '<optgroup label="Stock tracks">' +
       STOCK.map((t, i) => `<option value="stock:${i}">${t.title}</option>`).join('') + '</optgroup>' : '') +
-    '<optgroup label="Your own" id="ownGroup"><option value="open">ðŸ“‚ Open a fileâ€¦</option></optgroup>';
+    '<optgroup label="Your own" id="ownGroup"><option value="open">📂 Open a file…</option></optgroup>';
 }
 function setOwnTrackOption(name) {
   let opt = $('ownTrack');
@@ -960,7 +960,7 @@ function frame() {
   cells[b.m].querySelectorAll('.dots i').forEach((d, i) => d.classList.toggle('on', i <= sd));
   if (lastK !== null && b.k !== lastK) cells.forEach((c, i) => { if (i !== b.m) c.querySelectorAll('.dots i.on').forEach(d => d.classList.remove('on')); });
 
-  $('avNum').textContent = b.av >= 1 ? b.av : 'â€“';
+  $('avNum').textContent = b.av >= 1 ? b.av : '–';
   updateCountdown(b);
   $('avProgress').style.width = ((b.m + b.frac) / taal.N * 100).toFixed(2) + '%';
   $('time').textContent = fmt(t) + ' / ' + fmt(duration).replace(/\.\d+$/, '');
@@ -1049,7 +1049,7 @@ function applyRate() {
   audio.defaultPlaybackRate = rate;   // survives loading a new file
   audio.playbackRate = rate;
   $('targetBpm').value = targetBpm();
-  $('speedOut').textContent = rate.toFixed(2) + 'Ã—';
+  $('speedOut').textContent = rate.toFixed(2) + '×';
   $('bpmInfo').textContent = Math.round(targetBpm() * 10) / 10 + ' bpm';
   scheduledK = null;
 }
@@ -1100,7 +1100,7 @@ $('targetBpm').addEventListener('input', e => {
   // keep typing undisturbed: only refresh the readouts, not this input
   const rate = Math.min(4, Math.max(0.25, v / S.bpm));
   audio.defaultPlaybackRate = audio.playbackRate = rate;
-  $('speedOut').textContent = rate.toFixed(2) + 'Ã—';
+  $('speedOut').textContent = rate.toFixed(2) + '×';
   $('bpmInfo').textContent = v + ' bpm';
   scheduledK = null; save();
 });
@@ -1118,7 +1118,7 @@ $('winAv').addEventListener('change', e => { S.winAv = Number(e.target.value); s
 
 $('openBtn').addEventListener('click', () => $('file').click());
 $('file').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
-let trackValue = '';   // the current track, to restore when "Open a fileâ€¦" is cancelled
+let trackValue = '';   // the current track, to restore when "Open a file…" is cancelled
 $('trackSel').addEventListener('focus', e => trackValue = e.target.value);
 $('trackSel').addEventListener('change', e => {
   const v = e.target.value;
