@@ -163,7 +163,16 @@
   kbd { background: var(--panel2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; padding: 0 4px; font-size: 10px; color: var(--text); }
 
   @media (max-width: 640px) {
+    main { padding-left: 6px; padding-right: 6px; }
     .cell { width: 40px; }
+    /* status: info on its own line, then the current matra and the two countdowns */
+    .status { flex-wrap: wrap; gap: 6px 8px; }
+    .status .av { flex-basis: 100%; }
+    .status .now { flex: 0 0 auto; justify-content: flex-start; }
+    .status .bol { min-width: 0; }
+    .status .pill { flex: 1; justify-content: center; }
+    /* each vibhag wraps onto its own row: drop the divider so rows line up */
+    .vibhag, .vibhag:first-child { border-left: none; padding-left: 0; }
     .status .big { font-size: 22px; }
   }
 </style>
@@ -451,8 +460,9 @@ const $ = id => document.getElementById(id);
 const audio = $('audio');
 // offset = time (s) of avartan 1's sam; bMatra = matra the bandish starts on (every avartan)
 // bpm = tempo of the recording; targetBpm = practice tempo (null = same as bpm); speed follows target / bpm
+const PHONE = window.matchMedia('(max-width: 640px)').matches;
 const DEFAULTS = { taal: 'teentaal', bpm: 80, targetBpm: null, offset: 0, bMatra: 1, subdiv: 1, clickMode: 'off',
-                   winAv: 2, volume: 1, repeat: true, showGrid: false, showWave: false, custom: { vibhags: '4+4+4+4', marks: 'X 2 0 3', bols: '' } };
+                   winAv: PHONE ? 1 : 2, volume: 1, repeat: true, showGrid: false, showWave: false, custom: { vibhags: '4+4+4+4', marks: 'X 2 0 3', bols: '' } };
 let S = structuredClone(DEFAULTS);
 let fileKey = null;
 
@@ -726,8 +736,8 @@ const STRIPS = [
   { id: 'matra',   label: 'MATRA',         h: 22 },
   { id: 'laya',    label: 'LAYA',          h: 16 },
   { id: 'bandish', label: 'BANDISH',       h: 18 },
-  { id: 'samT',    label: '3-MATRA SAM TIHAI',     h: 18 },
-  { id: 'bandT',   label: '3-MATRA BANDISH TIHAI', h: 18 },
+  { id: 'samT',    label: '3-MATRA SAM TIHAI',     h: 18, short: 'SAM TIHAI' },
+  { id: 'bandT',   label: '3-MATRA BANDISH TIHAI', h: 18, short: 'BND TIHAI' },
   { id: 'wave',    label: 'AUDIO',         h: 80 },
 ];
 function stripLayout() {
@@ -735,7 +745,7 @@ function stripLayout() {
   let y = 0;
   for (const s of STRIPS) {
     if (s.id === 'wave' && !S.showWave) continue;
-    L[s.id] = { y, h: s.h, label: s.label };
+    L[s.id] = { y, h: s.h, label: s.label, short: s.short || s.label };
     y += s.h;
   }
   L.H = y;
@@ -880,10 +890,11 @@ function drawDetail(t, b) {
   for (const id of ids.slice(1)) { ctx.moveTo(0, L[id].y + 0.5); ctx.lineTo(W, L[id].y + 0.5); }
   ctx.stroke();
   ctx.font = '700 8px system-ui, sans-serif';
+  const narrow = W < 600;   // phones: short strip names so they hide fewer beats
   for (const id of ids) {
-    const s = L[id], tw = ctx.measureText(s.label).width;
+    const s = L[id], label = narrow ? s.short : s.label, tw = ctx.measureText(label).width;
     ctx.fillStyle = 'rgba(16,13,10,0.8)'; ctx.fillRect(0, s.y + 1, tw + 8, 11);
-    ctx.fillStyle = '#7d6d58'; ctx.fillText(s.label, 4, s.y + 7);
+    ctx.fillStyle = '#7d6d58'; ctx.fillText(label, 4, s.y + 7);
   }
 
   // loop region
