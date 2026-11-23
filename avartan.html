@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avartan – Taal Practice Player</title>
+<style>
+  :root {
+    --bg: #15120e;
+    --panel: #201b15;
+    --panel2: #2a231b;
+    --line: #3b3228;
+    --text: #f3e9da;
+    --muted: #a6957c;
+    --accent: #f0a33a;
+    --sam: #ff5a36;
+    --khali: #5aa6ff;
+    --next: #ffd27a;
+    --bandish: #5fd38a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 13px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1200px; margin: 0 auto; padding: 8px 12px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; }
+
+  /* ---------- toolbar / settings ---------- */
+  .bar { display: flex; align-items: flex-end; gap: 6px 10px; flex-wrap: wrap; }
+  .bar + .bar { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); }
+  .top { display: flex; align-items: center; gap: 10px; margin: 2px 2px 8px; }
+  h1 { font-size: 16px; margin: 0; }
+  h1 small { color: var(--muted); font-size: 12px; font-weight: 500; margin-left: 6px; }
+  .help-btn { width: 28px; height: 28px; padding: 0; border-radius: 50%; font-weight: 800; font-size: 14px; color: var(--accent); }
+
+  /* ---------- help dialog ---------- */
+  dialog#help { width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 32px); padding: 0;
+    background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 12px; }
+  dialog#help::backdrop { background: rgba(0,0,0,.6); }
+  .help-head { position: sticky; top: 0; display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+    background: var(--panel); border-bottom: 1px solid var(--line); }
+  .help-head h2 { margin: 0; font-size: 16px; flex: 1; }
+  .help-head h2 span { color: var(--accent); }
+  .help-body { padding: 4px 18px 18px; font-size: 13px; line-height: 1.55; }
+  .help-body h3 { margin: 18px 0 4px; font-size: 13px; color: var(--accent); text-transform: uppercase; letter-spacing: .8px; }
+  .help-body p, .help-body ul, .help-body ol { margin: 4px 0; }
+  .help-body ul, .help-body ol { padding-left: 20px; }
+  .help-body li { margin: 2px 0; }
+  .help-body b { color: var(--text); }
+  .help-body .k-sam { color: var(--sam); font-weight: 700; }
+  .help-body .k-khali { color: var(--khali); font-weight: 700; }
+  .help-body .k-bd { color: var(--bandish); font-weight: 700; }
+  .help-body .k-next { color: var(--next); font-weight: 700; }
+  .help-body table { border-collapse: collapse; width: 100%; margin: 4px 0; }
+  .help-body td { padding: 3px 8px 3px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .help-body td:first-child { white-space: nowrap; width: 1%; }
+  .help-body .tip { margin-top: 8px; padding: 6px 10px; border-left: 3px solid var(--accent); background: var(--panel2); border-radius: 4px; }
+  .sec-name { width: 58px; align-self: center; font-size: 10px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--accent); }
+  .speed-out { align-self: center; padding: 0 2px; font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 700; }
+  .grp .fname { align-self: center; margin-left: 4px; }
+  h1 span { color: var(--accent); }
+  .muted { color: var(--muted); font-size: 12px; }
+  .fname { align-self: center; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  select.track { width: 230px; text-overflow: ellipsis; }
+  .time { align-self: center; font-variant-numeric: tabular-nums; color: var(--muted); min-width: 92px; }
+  .spacer { flex: 1; }
+  label { display: flex; flex-direction: column; gap: 2px; color: var(--muted); font-size: 11px; }
+  input, select, button { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 6px;
+    padding: 4px 7px; font: inherit; height: 28px; }
+  input[type=number] { width: 64px; }
+  .vol { flex-direction: row; align-items: center; gap: 4px; align-self: center; font-size: 13px; }
+  .vol input { width: 90px; height: auto; padding: 0; border: none; background: none; accent-color: var(--accent); }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  button { cursor: pointer; white-space: nowrap; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #1b1006; border-color: var(--accent); font-weight: 700; min-width: 62px; }
+  button.on { background: #3b2a12; border-color: var(--accent); color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  .grp { display: flex; gap: 3px; }
+  .grp input, .grp select { min-width: 0; }
+  .custom { display: none; }
+  .custom.show { display: flex; }
+  .custom label { flex: 1; min-width: 110px; }
+  .custom label.wide { flex: 4; min-width: 220px; }
+  .custom input { width: 100%; }
+
+  /* ---------- status + taal grid ---------- */
+  .status { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .status .now { display: flex; align-items: baseline; gap: 8px; flex: 1; justify-content: center; }
+  .status .big { font-size: 26px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right; }
+  .status .bol { font-size: 14px; color: var(--muted); min-width: 70px; }
+  .status .av b { color: var(--text); font-size: 15px; }
+  .pill { display: inline-flex; align-items: baseline; gap: 5px; padding: 2px 10px; border-radius: 999px;
+    background: var(--panel2); border: 1px solid var(--line); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pill b { font-size: 16px; color: var(--sam); }
+  .pill.soon { border-color: var(--sam); box-shadow: 0 0 0 2px rgba(255,90,54,.2); }
+  .pill.now { background: var(--sam); color: #1b0d07; }
+  .pill.now b { color: #1b0d07; }
+  .pill.bd b { color: var(--bandish); }
+  .pill.bd.soon { border-color: var(--bandish); box-shadow: 0 0 0 2px rgba(95,211,138,.2); }
+  .pill.bd.now { background: var(--bandish); }
+  .pill.bd.now b { color: #08190f; }
+
+  .taal { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .vibhag { display: flex; gap: 3px; padding-left: 8px; border-left: 2px solid var(--line); }
+  .vibhag:first-child { border-left: none; padding-left: 0; }
+  .cell { position: relative; overflow: hidden; width: 48px; padding: 3px 2px 7px; border-radius: 7px;
+    background: var(--panel2); border: 2px solid transparent; text-align: center; cursor: pointer;
+    transition: transform .08s ease, background-color .08s ease; }
+  .cell .mk { display: block; height: 14px; font-weight: 800; font-size: 12px; line-height: 14px; color: var(--accent); }
+  .cell.sam .mk { color: var(--sam); }
+  .cell.khali .mk { color: var(--khali); }
+  .cell .bol { display: block; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cell .num { display: block; font-size: 10px; color: var(--muted); line-height: 12px; }
+  .cell .dots { position: absolute; left: 4px; right: 4px; bottom: 2px; display: flex; gap: 2px; }
+  .cell .dots i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.08); }
+  .cell .bd { position: absolute; top: 2px; right: 3px; font-size: 9px; font-weight: 800; color: var(--bandish); display: none; }
+  .cell.bstart .bd { display: block; }
+  .cell.bstart { box-shadow: inset 0 -2px 0 var(--bandish); }
+  .cell.khali { background: #1d2532; }
+  .cell::before { content: ""; position: absolute; inset: 0; background: var(--next);
+    transform-origin: bottom; transform: scaleY(var(--p, 0)); opacity: 0; pointer-events: none; }
+  .cell > * { position: relative; }
+  .cell.next { border-color: var(--next); }
+  .cell.next::before { opacity: .28; }
+  .cell.next.sam { border-color: var(--sam); }
+  .cell.next.sam::before { background: var(--sam); }
+  .cell.current { background: var(--accent); color: #1b1006; transform: scale(1.08); }
+  .cell.current .mk, .cell.current .num, .cell.current .bd { color: #1b1006; }
+  .cell.current.sam { background: var(--sam); }
+  .cell.current.khali { background: var(--khali); }
+  .cell.current .dots i { background: rgba(0,0,0,.18); }
+  .cell.current .dots i.on { background: #1b1006; }
+  body.no-grid #taal, body.no-grid .avbar { display: none; }
+  body.no-grid .status { margin-bottom: 0; }
+  .avbar { height: 3px; background: var(--panel2); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+  .avbar > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--sam)); }
+
+  @keyframes samflash { from { box-shadow: inset 0 0 0 2px var(--sam), 0 0 24px rgba(255,90,54,.45); } to { box-shadow: none; } }
+  .panel.flash { animation: samflash .45s ease-out; }
+
+  /* ---------- waveform ---------- */
+  .waves { position: relative; }
+  canvas { display: block; width: 100%; border-radius: 7px; background: #100d0a; cursor: pointer; }
+  #detail { height: 142px; } /* set by script from the visible strips */
+  #overview { height: 34px; margin-top: 4px; }
+  .drop { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+    color: var(--muted); border: 2px dashed var(--line); border-radius: 7px; pointer-events: none; padding: 10px; }
+  .drop.hidden { display: none; }
+  body.dragging .drop { display: flex; border-color: var(--accent); color: var(--text); background: rgba(240,163,58,.07); }
+
+  details { color: var(--muted); font-size: 11px; }
+  summary { cursor: pointer; }
+  kbd { background: var(--panel2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; padding: 0 4px; font-size: 10px; color: var(--text); }
+
+  @media (max-width: 640px) {
+    .cell { width: 40px; }
+    .status .big { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <!-- Toolbar + settings -->
+  <div class="top">
+    <h1><span>Avartan</span><small>Taal Practice Player</small></h1>
+    <span class="spacer"></span>
+    <button class="help-btn" id="helpBtn" title="How to use Avartan (?)" aria-label="Help">?</button>
+  </div>
+
+  <section class="panel">
+    <!-- TAAL: recording, taal and laya -->
+    <div class="bar">
+      <span class="sec-name">Taal</span>
+      <input type="file" id="file" accept="audio/*" hidden>
+      <label title="Pick a stock track, or open / drop your own recording">Track
+        <span class="grp">
+          <select id="trackSel" class="track"></select>
+          <button id="openBtn" title="Open your own audio file (or drop it on the page)">📂 Your own…</button>
+        </span>
+      </label>
+      <label>Taal <select id="taalSel"></select></label>
+      <label title="Tempo of the recording as it was played">Original BPM
+        <span class="grp"><input type="number" id="bpm" min="10" max="800" step="0.1" value="80"><button id="tapBtn" title="Tap tempo: tap this button (or T) on every matra while the audio plays; after 3 taps the original BPM is set from your tapping">Tap</button></span>
+      </label>
+      <label title="Tempo you want to practise at; playback speed follows">Target BPM
+        <span class="grp"><input type="number" id="targetBpm" min="10" max="800" step="0.1" value="80"><button id="resetTarget" title="Back to the original tempo">↺</button></span>
+      </label>
+      <span class="speed-out" id="speedOut" title="Playback speed = target ÷ original">1.00×</span>
+      <label>Divisions
+        <select id="subdiv">
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          <option value="4">4</option><option value="6">6</option><option value="8">8</option>
+        </select>
+      </label>
+      <label title="Where in the recording avartan 1 begins">Avartan 1 sam at (s)
+        <span class="grp"><input type="number" id="offset" step="0.01" value="0" style="width:74px"><button id="markBtn" title="This moment is avartan 1 sam (S)">Mark sam</button></span>
+      </label>
+    </div>
+
+    <div class="bar custom" id="customBox">
+      <span class="sec-name"></span>
+      <label>Vibhags (e.g. 4+4+4+4) <input id="cVibhags" value="4+4+4+4"></label>
+      <label>Marks (X sam, 0 khali) <input id="cMarks" value="X 2 0 3"></label>
+      <label class="wide">Bols (one per matra) <input id="cBols" value=""></label>
+    </div>
+
+    <!-- BANDISH: where it starts and the tihais -->
+    <div class="bar">
+      <span class="sec-name">Bandish</span>
+      <label>Starts on matra
+        <select id="bMatra" title="Matra the bandish starts on (marked in every avartan)"></select>
+      </label>
+      <span class="muted" style="align-self:center">3-matra tihais land on sam and on the bandish matra</span>
+    </div>
+
+    <!-- PLAYER: transport and display -->
+    <div class="bar">
+      <span class="sec-name">Player</span>
+      <button class="primary" id="playBtn" disabled>Play</button>
+      <span class="grp">
+        <button id="backAv" title="Previous avartan (Shift+←)">⏮</button>
+        <button id="fwdAv" title="Next avartan (Shift+→)">⏭</button>
+        <button id="toBandish" title="Back to the bandish start (B)">⇤ Bandish</button>
+      </span>
+      <span class="time" id="time">0:00.00 / 0:00</span>
+      <button id="repeatBtn" title="Repeat the whole track continuously (P)">⟳ Repeat</button>
+      <span class="grp">
+        <button id="loopBtn" title="Loop the current avartan(s) (L)">Loop av</button>
+        <select id="loopCount" title="Avartans to loop"><option>1</option><option>2</option><option>4</option></select>
+      </span>
+      <label>Click
+        <select id="clickMode">
+          <option value="off">Off</option><option value="sam">Sam</option>
+          <option value="vibhag">Vibhags</option><option value="all">All matras</option>
+        </select>
+      </label>
+      <label>View
+        <select id="winAv" title="Avartans visible in the beat view">
+          <option value="0.5">½ av</option><option value="1">1 av</option><option value="2" selected>2 av</option>
+          <option value="3">3 av</option><option value="4">4 av</option>
+        </select>
+      </label>
+      <span class="grp">
+        <button id="gridBtn" title="Show / hide the matra boxes (M)">Matras</button>
+        <button id="waveBtn" title="Show / hide the audio waveform; beat lines keep scrolling (W)">Waveform</button>
+      </span>
+      <label class="vol" title="Volume (↑/↓)">🔊 <input type="range" id="volume" min="0" max="1" step="0.01" value="1"></label>
+    </div>
+  </section>
+
+  <!-- Taal visual -->
+  <section class="panel" id="taalPanel">
+    <div class="status">
+      <span class="muted av">Av <b id="avNum">–</b> · <span id="taalName"></span> · <span id="bpmInfo"></span></span>
+      <div class="now"><span class="big" id="matraNum">–</span><span class="bol" id="matraBol"></span></div>
+      <span class="pill bd" id="bdCountdown">Bandish in <b>–</b></span>
+      <span class="pill" id="countdown">Sam in <b>–</b></span>
+    </div>
+    <div class="taal" id="taal"></div>
+    <div class="avbar"><div id="avProgress"></div></div>
+  </section>
+
+  <!-- Waveform -->
+  <section class="panel">
+    <div class="waves">
+      <canvas id="detail"></canvas>
+      <canvas id="overview"></canvas>
+      <div class="drop" id="drop">Choose a stock track, or open / drop your own recording (mp3, wav, m4a…)</div>
+    </div>
+  </section>
+
+  <details>
+    <summary>Shortcuts</summary>
+    <kbd>Space</kbd> play/pause · <kbd>←</kbd>/<kbd>→</kbd> ±2 s · <kbd>Shift</kbd>+<kbd>←</kbd>/<kbd>→</kbd> ±1 avartan ·
+    <kbd>B</kbd> back to the bandish start · <kbd>P</kbd> repeat track · <kbd>↑</kbd>/<kbd>↓</kbd> volume · <kbd>M</kbd> matra boxes · <kbd>W</kbd> waveform · <kbd>S</kbd> mark avartan 1 sam · <kbd>R</kbd> re-sync nearest sam to now (keeps numbering) ·
+    <kbd>[</kbd>/<kbd>]</kbd> nudge sam ∓10 ms · <kbd>-</kbd>/<kbd>=</kbd> BPM ∓0.1 · <kbd>T</kbd> tap · <kbd>L</kbd> loop · <kbd>?</kbd> help.
+    Click a matra box to jump to it. Settings are remembered per audio file.
+  </details>
+</main>
+
+<dialog id="help" aria-labelledby="helpTitle">
+  <div class="help-head">
+    <h2 id="helpTitle"><span>Avartan</span> · How to use</h2>
+    <button id="helpClose" title="Close (Esc)">✕ Close</button>
+  </div>
+  <div class="help-body">
+    <p>Avartan lays a taal cycle over any recording (a tabla theka, a lehra, or a performance) so you can see where you are
+      in the cycle, know when sam and the bandish are coming, and practise at your own tempo.</p>
+
+    <h3>1 · Get started</h3>
+    <ol>
+      <li><b>Choose a recording.</b> Pick one of the <b>stock tracks</b> from the <b>Track</b> list, or use your own: click
+        <b>📂 Your own…</b> (or "Open a file…" in the list), or drag an mp3 / wav / m4a / ogg / flac file onto the page.
+        Stock tracks may come with the taal already set; the last stock track you used opens automatically next time.</li>
+      <li><b>Pick the taal</b> from the <b>Taal</b> list: Teentaal, Ektaal, Jhaptaal, Rupak, and others. For anything else, choose
+        <b>Custom…</b> (see below).</li>
+      <li><b>Set the Original BPM</b>, the tempo the recording was played at (matras per minute). If you don't know it, play
+        the audio and tap <b>Tap</b> (or press <kbd>T</kbd>) on every matra. After 3 taps the BPM is filled in.</li>
+      <li><b>Mark sam.</b> Play the recording and press <b>Mark sam</b> (or <kbd>S</kbd>) right on the first sam. That moment
+        becomes avartan 1, matra 1. You can also type the time in seconds in <b>Avartan 1 sam at (s)</b>.</li>
+      <li>Press <b>Play</b> (<kbd>Space</kbd>). The matra boxes, countdowns and beat view now follow the music.</li>
+    </ol>
+
+    <h3>2 · Fine-tune the alignment</h3>
+    <p>If the grid slowly drifts away from the music, the BPM is slightly off. If it is off by a constant amount, sam is slightly off.</p>
+    <ul>
+      <li><kbd>-</kbd> / <kbd>=</kbd>: lower or raise the original BPM by 0.1 to fix drift.</li>
+      <li><kbd>[</kbd> / <kbd>]</kbd>: move sam 10 ms earlier or later.</li>
+      <li><kbd>R</kbd>: re-sync. Press it right on a sam heard in the music; the nearest sam snaps to that moment without
+        changing the avartan numbering. Handy when a long recording drifts.</li>
+    </ul>
+    <div class="tip">Settings are remembered <b>per audio file</b>. Open the same file again and your taal, BPM, sam and bandish come back.</div>
+
+    <h3>3 · Practise slower (or faster)</h3>
+    <p>Set <b>Target BPM</b> to the tempo you want to practise at. Playback speed = target ÷ original (shown next to it, e.g.
+      <b>0.75×</b>). The beat grid scales with it, so everything stays aligned. <b>↺</b> goes back to the original tempo.</p>
+
+    <h3>4 · Bandish and tihais</h3>
+    <p>Choose the matra your bandish (composition) starts on in <b>Starts on matra</b>. Avartan then:</p>
+    <ul>
+      <li>marks that matra with a <span class="k-bd">B</span> in the matra boxes,</li>
+      <li>shows a <span class="k-bd">Bandish in N</span> countdown,</li>
+      <li>draws a <span class="k-bd">Bandish</span> flag in every avartan of the beat view, and</li>
+      <li>shows where a <b>3-matra tihai</b> (3 × 3 matras) must start so that it lands on <span class="k-sam">sam</span> or on the
+        <span class="k-bd">bandish</span> matra.</li>
+    </ul>
+    <p><b>⇤ Bandish</b> (<kbd>B</kbd>) jumps back to the latest bandish start; press it again to go one more avartan back.</p>
+
+    <h3>5 · Reading the display</h3>
+    <table>
+      <tr><td><b>Matra boxes</b></td><td>One box per matra, grouped by vibhag, each showing its tali mark, bol and number.
+        <span class="k-sam">X</span> = sam, <span class="k-khali">0</span> = khali (blue shading). The current matra is lit; the
+        <span class="k-next">next</span> one fills up as it approaches. The small bars at the bottom show the divisions. Click a box to jump to that matra.</td></tr>
+      <tr><td><b>Status line</b></td><td>Avartan number, taal, current tempo, the big current matra and bol, and the
+        <span class="k-bd">Bandish in</span> / <span class="k-sam">Sam in</span> countdowns (they glow in the last 3 matras). The
+        panel flashes on every sam.</td></tr>
+      <tr><td><b>Beat view</b></td><td>A scrolling timeline; the white line is the playhead. Strips from top to bottom:
+        <b>MATRA</b> (numbers, marks, bols) · <b>LAYA</b> (one block per division, current lit) · <b>BANDISH</b> ·
+        <b>3-MATRA SAM TIHAI</b> · <b>3-MATRA BANDISH TIHAI</b> · <b>AUDIO</b> waveform. Click or drag on it to seek.</td></tr>
+      <tr><td><b>Overview</b></td><td>The whole track, with sam ticks in red and bandish lines in green. The box shows the part
+        visible above. Click or drag to seek anywhere.</td></tr>
+    </table>
+
+    <h3>6 · Player controls</h3>
+    <ul>
+      <li><b>⏮ / ⏭</b>: previous / next avartan (<kbd>Shift</kbd>+<kbd>←</kbd>/<kbd>→</kbd>). <kbd>←</kbd>/<kbd>→</kbd> move 2 s.</li>
+      <li><b>⟳ Repeat</b> (<kbd>P</kbd>): play the whole track over and over.</li>
+      <li><b>Loop av</b> (<kbd>L</kbd>): loop the current avartan, or 2 or 4 avartans (chosen in the list next to it), from sam to sam.</li>
+      <li><b>Divisions</b>: split each matra into 2, 3, 4, 6 or 8 parts (dugun, tigun, chaugun…) in the boxes and the beat view.</li>
+      <li><b>Click</b>: a metronome on <b>Sam</b> only, on every <b>Vibhag</b>, or on <b>All matras</b>. Sam, khali and tali have different pitches.</li>
+      <li><b>View</b>: how many avartans fit in the beat view (½ to 4).</li>
+      <li><b>Matras</b> (<kbd>M</kbd>) / <b>Waveform</b> (<kbd>W</kbd>): show or hide the matra boxes or the audio strip.</li>
+      <li>🔊 Volume (<kbd>↑</kbd>/<kbd>↓</kbd>).</li>
+    </ul>
+
+    <h3>7 · Custom taal</h3>
+    <p>Choose <b>Custom…</b> and fill in three fields (picking Custom right after a preset copies that preset so you can tweak it):</p>
+    <ul>
+      <li><b>Vibhags</b>: matras per vibhag, e.g. <code>3+2+2</code> for 7 matras.</li>
+      <li><b>Marks</b>: one per vibhag, <code>X</code> for sam, <code>0</code> for khali, numbers for tali, e.g. <code>X 2 3</code>.</li>
+      <li><b>Bols</b>: one per matra, separated by spaces.</li>
+    </ul>
+
+    <h3>Keyboard shortcuts</h3>
+    <table>
+      <tr><td><kbd>Space</kbd></td><td>Play / pause</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Back / forward 2 s</td></tr>
+      <tr><td><kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd></td><td>Previous / next avartan</td></tr>
+      <tr><td><kbd>B</kbd></td><td>Back to the bandish start</td></tr>
+      <tr><td><kbd>L</kbd> · <kbd>P</kbd></td><td>Loop avartan(s) · repeat whole track</td></tr>
+      <tr><td><kbd>S</kbd> · <kbd>R</kbd></td><td>Mark avartan 1 sam · re-sync nearest sam to now</td></tr>
+      <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>Move sam −/+ 10 ms</td></tr>
+      <tr><td><kbd>-</kbd> <kbd>=</kbd></td><td>Original BPM −/+ 0.1</td></tr>
+      <tr><td><kbd>T</kbd></td><td>Tap tempo</td></tr>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Volume</td></tr>
+      <tr><td><kbd>M</kbd> · <kbd>W</kbd></td><td>Show / hide matra boxes · waveform</td></tr>
+      <tr><td><kbd>?</kbd> · <kbd>Esc</kbd></td><td>Open / close this help</td></tr>
+    </table>
+  </div>
+</dialog>
+
+<audio id="audio" preload="auto"></audio>
+
+<script>
+// ---------------------------------------------------------------------------
+// Taal definitions
+// ---------------------------------------------------------------------------
+const TAALS = {
+  teentaal:   { name: 'Teentaal (16)',    vibhags: [4,4,4,4],     marks: 'X 2 0 3',
+                bols: 'Dha Dhin Dhin Dha Dha Dhin Dhin Dha Dha Tin Tin Ta Ta Dhin Dhin Dha' },
+  tilwada:    { name: 'Tilwada (16)',     vibhags: [4,4,4,4],     marks: 'X 2 0 3',
+                bols: 'Dha TiRaKiTa Dhin Dhin Dha Dha Tin Tin Ta TiRaKiTa Dhin Dhin Dha Dha Dhin Dhin' },
+  ektaal:     { name: 'Ektaal (12)',      vibhags: [2,2,2,2,2,2], marks: 'X 0 2 0 3 4',
+                bols: 'Dhin Dhin DhaGe TiRaKiTa Tu Na Kat Ta DhaGe TiRaKiTa Dhi Na' },
+  chautaal:   { name: 'Chautaal (12)',    vibhags: [2,2,2,2,2,2], marks: 'X 0 2 0 3 4',
+                bols: 'Dha Dha Din Ta KiTa Dha Din Ta TiTa KaTa GaDi GaNa' },
+  jhaptaal:   { name: 'Jhaptaal (10)',    vibhags: [2,3,2,3],     marks: 'X 2 0 3',
+                bols: 'Dhi Na Dhi Dhi Na Ti Na Dhi Dhi Na' },
+  sooltaal:   { name: 'Sooltaal (10)',    vibhags: [2,2,2,2,2],   marks: 'X 0 2 3 0',
+                bols: 'Dha Dha Din Ta KiTa Dha TiTa KaTa GaDi GaNa' },
+  rupak:      { name: 'Rupak (7)',        vibhags: [3,2,2],       marks: 'X 2 3',
+                bols: 'Tin Tin Na Dhi Na Dhi Na', samIsKhali: true },
+  jhoomra:    { name: 'Jhoomra (14)',     vibhags: [3,4,3,4],     marks: 'X 2 0 3',
+                bols: 'Dhin -Dha TiRaKiTa Dhin Dhin DhaGe TiRaKiTa Tin -Ta TiRaKiTa Dhin Dhin DhaGe TiRaKiTa' },
+  deepchandi: { name: 'Deepchandi (14)',  vibhags: [3,4,3,4],     marks: 'X 2 0 3',
+                bols: 'Dha Dhin - Dha Dha Tin - Ta Tin - Dha Dha Dhin -' },
+  adachautaal:{ name: 'Ada Chautaal (14)',vibhags: [2,2,2,2,2,2,2], marks: 'X 2 0 3 0 4 0',
+                bols: 'Dhin TiRaKiTa Dhi Na Tu Na Kat Ta TiRaKiTa Dhi Na Dhi Dhi Na' },
+  dhamar:     { name: 'Dhamar (14)',      vibhags: [5,2,3,4],     marks: 'X 2 0 3',
+                bols: 'Ka Dhi Ta Dhi Ta Dha - Ga Ti Ta Ti Ta Ta -' },
+  dadra:      { name: 'Dadra (6)',        vibhags: [3,3],         marks: 'X 0',
+                bols: 'Dha Dhi Na Dha Ti Na' },
+  keherwa:    { name: 'Keherwa (8)',      vibhags: [4,4],         marks: 'X 0',
+                bols: 'Dha Ge Na Ti Na Ka Dhi Na' },
+  custom:     { name: 'Custom…' },
+};
+
+// ---------------------------------------------------------------------------
+// Stock tracks: mp3 files that sit in the same folder as this page.
+// To add one, copy the file next to avartan.html and add a line here.
+//   file:   file name (relative to this page)
+//   title:  what the user sees in the Track list
+//   preset: optional starting settings for the track (taal, bpm, offset, bMatra…);
+//           once the user changes anything, their own settings for the track win
+// ---------------------------------------------------------------------------
+const STOCK = [
+  { file: 'Kaushik_Dhwani_Teen_Taal.mp3', title: 'Kaushik Dhwani · Teentaal', preset: { taal: 'teentaal' } },
+];
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+const $ = id => document.getElementById(id);
+const audio = $('audio');
+// offset = time (s) of avartan 1's sam; bMatra = matra the bandish starts on (every avartan)
+// bpm = tempo of the recording; targetBpm = practice tempo (null = same as bpm); speed follows target / bpm
+const DEFAULTS = { taal: 'teentaal', bpm: 80, targetBpm: null, offset: 0, bMatra: 1, subdiv: 1, clickMode: 'off',
+                   winAv: 2, volume: 1, repeat: false, showGrid: true, showWave: true, custom: { vibhags: '4+4+4+4', marks: 'X 2 0 3', bols: '' } };
+let S = structuredClone(DEFAULTS);
+let fileKey = null;
+
+let taal = null;          // { N, matras:[{bol, mark, vStart, vIdx, sam, khali}] }
+let cells = [];
+let actx = null;
+let peaks = null, peakRate = 400, duration = 0;
+let loop = null;          // { a, b } in seconds
+let lastCur = -1, lastNext = -1, lastK = null, scheduledK = null;
+
+function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+function load(key) { try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; } }
+function save() { store('taal:last', S); if (fileKey) store('taal:file:' + fileKey, S); }
+function withDefaults(o) {
+  const s = { ...structuredClone(DEFAULTS), ...o };
+  // settings saved by the earlier version used start/startMatra
+  if (o && o.offset === undefined && o.start !== undefined) s.offset = o.start;
+  // ...and a speed selector instead of a target tempo
+  if (o && o.targetBpm === undefined && o.speed && o.speed !== 1) s.targetBpm = Math.round(s.bpm * o.speed * 10) / 10;
+  delete s.speed; delete s.bAv;
+  return s;
+}
+
+// ---------------------------------------------------------------------------
+// Taal model
+// ---------------------------------------------------------------------------
+function buildTaal() {
+  const def = S.taal === 'custom' ? null : TAALS[S.taal];
+  let vibhags, marks, bols, samIsKhali = false;
+  if (def) {
+    vibhags = def.vibhags; marks = def.marks.split(/\s+/); bols = def.bols.split(/\s+/);
+    samIsKhali = !!def.samIsKhali;
+  } else {
+    vibhags = S.custom.vibhags.split(/[^0-9]+/).map(Number).filter(n => n > 0);
+    if (!vibhags.length) vibhags = [4];
+    marks = S.custom.marks.trim().split(/\s+/).filter(Boolean);
+    bols = S.custom.bols.trim().split(/\s+/).filter(Boolean);
+  }
+  const matras = [];
+  vibhags.forEach((len, vIdx) => {
+    const mk = marks[vIdx] ?? (vIdx === 0 ? 'X' : String(vIdx + 1));
+    for (let j = 0; j < len; j++) {
+      const i = matras.length;
+      matras.push({
+        bol: bols[i] ?? '', vIdx, vStart: j === 0,
+        mark: j === 0 ? (samIsKhali && vIdx === 0 ? 'X/0' : mk) : '',
+        sam: i === 0,
+        khali: j === 0 && (mk === '0' || (samIsKhali && vIdx === 0)),
+      });
+    }
+  });
+  // a matra inherits khali shading from its vibhag
+  matras.forEach(m => m.inKhali = matras.find(q => q.vIdx === m.vIdx && q.vStart).khali);
+  taal = { N: matras.length, vibhags, matras, name: def ? def.name : 'Custom (' + matras.length + ')' };
+  if (S.bMatra > taal.N) S.bMatra = 1;
+}
+
+function renderTaal() {
+  const box = $('taal');
+  box.innerHTML = '';
+  cells = [];
+  let vEl = null;
+  taal.matras.forEach((m, i) => {
+    if (m.vStart) { vEl = document.createElement('div'); vEl.className = 'vibhag'; box.appendChild(vEl); }
+    const c = document.createElement('div');
+    c.className = 'cell' + (m.sam ? ' sam' : '') + (m.khali ? ' khali' : '');
+    c.innerHTML = `<span class="bd" title="Bandish starts here">B</span><span class="mk">${m.mark}</span>` +
+                  `<span class="bol" title="${m.bol}">${m.bol || '&nbsp;'}</span>` +
+                  `<span class="num">${i + 1}</span><span class="dots">${'<i></i>'.repeat(S.subdiv)}</span>`;
+    c.addEventListener('click', () => seekToMatra(i));
+    vEl.appendChild(c);
+    cells.push(c);
+  });
+  $('taalName').textContent = taal.name;
+  const sm = $('bMatra');
+  sm.innerHTML = taal.matras.map((m, i) => `<option value="${i + 1}">${i + 1}${m.mark ? ' ' + m.mark : ''}${m.bol ? ' ' + m.bol : ''}</option>`).join('');
+  sm.value = S.bMatra;
+  markBandishCell();
+  lastCur = lastNext = -1;
+}
+function markBandishCell() { cells.forEach((c, i) => c.classList.toggle('bstart', i === S.bMatra - 1)); }
+
+// Beat math. k = matras elapsed since avartan 1's sam (negative before it).
+const period = () => 60 / S.bpm;
+const mod = (a, n) => ((a % n) + n) % n;
+function beatAt(t) {
+  const pos = (t - S.offset) / period();
+  // a few ms of tolerance so a playhead sitting on a beat line (e.g. after a seek) counts as that beat
+  const k = Math.floor(pos + 0.008 / period());
+  const frac = Math.min(Math.max(pos - k, 0), 0.999999);
+  return { k, frac, m: mod(k, taal.N), av: Math.floor(k / taal.N) + 1 };
+}
+const timeOfK = k => S.offset + k * period();
+// k of the first bandish start; it then recurs every avartan at the same matra
+const isBandishK = k => mod(k, taal.N) === S.bMatra - 1;
+// time of the sam that begins the avartan containing time t
+function samTimeAt(t) { const b = beatAt(t); return timeOfK(b.k - b.m); }
+
+// ---------------------------------------------------------------------------
+// Audio loading + peaks
+// ---------------------------------------------------------------------------
+function ensureCtx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+
+// The user's own file (from the Open button or drag & drop)
+function loadFile(file) {
+  if (!file) return;
+  setOwnTrackOption(file.name);
+  store('taal:lastTrack', null);
+  return loadSource({ key: file.name + ':' + file.size, url: URL.createObjectURL(file), getBytes: () => file.arrayBuffer() });
+}
+
+// A stock track from the STOCK list
+function loadStock(i) {
+  const t = STOCK[i];
+  if (!t) return;
+  $('trackSel').value = 'stock:' + i;
+  store('taal:lastTrack', t.file);
+  const url = encodeURI(t.file);
+  return loadSource({
+    key: 'stock:' + t.file, url, preset: t.preset,
+    getBytes: async () => { const r = await fetch(url); if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); },
+  });
+}
+
+let loadSeq = 0;
+async function loadSource({ key, url, getBytes, preset }) {
+  const seq = ++loadSeq;   // a newer load cancels the result of an older one
+  ensureCtx();
+  $('drop').textContent = 'Loading…';
+  $('drop').classList.remove('hidden');
+  $('playBtn').disabled = true;
+  audio.pause();
+  peaks = null; duration = 0; overviewCache = null;
+  fileKey = key;
+  // the user's saved settings for this track win; otherwise start from the track's preset
+  const saved = load('taal:file:' + fileKey);
+  if (saved) S = withDefaults(saved);
+  else S = withDefaults({ ...S, offset: 0, targetBpm: null, bMatra: 1, ...(preset || {}) });
+  syncInputs(); rebuild();
+
+  if (audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src);
+  audio.src = url;
+  applyRate();
+  loop = null; $('loopBtn').classList.remove('on');
+
+  try {
+    const bytes = await getBytes();
+    if (seq !== loadSeq) return;
+    const buf = await actx.decodeAudioData(bytes);
+    if (seq !== loadSeq) return;
+    duration = buf.duration;
+    const n = Math.ceil(duration * peakRate);
+    const hop = buf.sampleRate / peakRate;
+    peaks = new Float32Array(n);
+    const chans = [];
+    for (let c = 0; c < buf.numberOfChannels; c++) chans.push(buf.getChannelData(c));
+    let maxAll = 1e-6;
+    for (let i = 0; i < n; i++) {
+      const s0 = Math.floor(i * hop), s1 = Math.min(Math.floor((i + 1) * hop), buf.length);
+      let mx = 0;
+      for (const ch of chans) for (let s = s0; s < s1; s++) { const v = Math.abs(ch[s]); if (v > mx) mx = v; }
+      peaks[i] = mx; if (mx > maxAll) maxAll = mx;
+    }
+    for (let i = 0; i < n; i++) peaks[i] /= maxAll;
+    overviewCache = null;
+    $('drop').classList.add('hidden');
+    $('playBtn').disabled = false;
+  } catch (err) {
+    if (seq !== loadSeq) return;
+    // Browsers block reading files next to a page opened straight from disk (file://).
+    // The track still plays through the audio element; only the waveform is missing.
+    $('drop').textContent = location.protocol === 'file:'
+      ? 'Playing without the waveform: the browser does not let a page opened from disk read files beside it. Open your own file instead, or serve this folder (e.g. python -m http.server) to see the waveform.'
+      : 'Could not decode this file: ' + err.message;
+  }
+}
+
+// Track list: stock tracks, then (once opened) the user's own file
+function buildTrackList() {
+  const sel = $('trackSel');
+  sel.innerHTML = '<option value="" disabled selected>Choose a track…</option>' +
+    (STOCK.length ? '<optgroup label="Stock tracks">' +
+      STOCK.map((t, i) => `<option value="stock:${i}">${t.title}</option>`).join('') + '</optgroup>' : '') +
+    '<optgroup label="Your own" id="ownGroup"><option value="open">📂 Open a file…</option></optgroup>';
+}
+function setOwnTrackOption(name) {
+  let opt = $('ownTrack');
+  if (!opt) {
+    opt = document.createElement('option'); opt.id = 'ownTrack'; opt.value = 'own';
+    $('ownGroup').prepend(opt);
+  }
+  opt.textContent = name; opt.title = name;
+  $('trackSel').value = 'own';
+}
+
+// ---------------------------------------------------------------------------
+// Click track (scheduled on the AudioContext clock for tight timing)
+// ---------------------------------------------------------------------------
+function clickAt(when, kind) {
+  const ctx = ensureCtx();
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'sine';
+  o.frequency.value = kind === 'sam' ? 1760 : kind === 'khali' ? 660 : kind === 'vibhag' ? 1175 : 880;
+  const vol = kind === 'sam' ? 0.5 : kind === 'other' ? 0.18 : 0.32;
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(vol, when + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 0.07);
+  o.connect(g).connect(ctx.destination);
+  o.start(when); o.stop(when + 0.09);
+}
+
+function scheduleClicks(t, b) {
+  if (S.clickMode === 'off' || audio.paused || !actx) return;
+  const nk = b.k + 1;
+  if (scheduledK === nk) return;
+  const dt = (timeOfK(nk) - t) / audio.playbackRate;
+  if (dt > 0.12 || dt < -0.02) return;
+  scheduledK = nk;
+  const m = taal.matras[mod(nk, taal.N)];
+  const kind = m.sam ? 'sam' : m.khali ? 'khali' : m.vStart ? 'vibhag' : 'other';
+  if (S.clickMode === 'sam' && kind !== 'sam') return;
+  if (S.clickMode === 'vibhag' && kind === 'other') return;
+  clickAt(actx.currentTime + Math.max(dt, 0), kind);
+}
+
+// ---------------------------------------------------------------------------
+// Drawing
+// ---------------------------------------------------------------------------
+const detail = $('detail'), overview = $('overview');
+let overviewCache = null;
+
+function fitCanvas(c) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.round(c.clientWidth * dpr), h = Math.round(c.clientHeight * dpr);
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; if (c === overview) overviewCache = null; }
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: c.clientWidth, H: c.clientHeight };
+}
+
+function peakRange(t0, t1) {
+  if (!peaks) return 0;
+  let i0 = Math.max(0, Math.floor(t0 * peakRate)), i1 = Math.min(peaks.length, Math.ceil(t1 * peakRate));
+  let mx = 0;
+  for (let i = i0; i < i1; i++) if (peaks[i] > mx) mx = peaks[i];
+  return mx;
+}
+
+function detailWindow() {
+  const win = Math.min(Math.max(S.winAv * taal.N * period(), 1.5), 90);
+  const t0 = audio.currentTime - win * 0.3;
+  return { t0, win };
+}
+
+// Beat view is stacked into horizontal strips sharing one time axis.
+const STRIPS = [
+  { id: 'matra',   label: 'MATRA',         h: 22 },
+  { id: 'laya',    label: 'LAYA',          h: 16 },
+  { id: 'bandish', label: 'BANDISH',       h: 18 },
+  { id: 'samT',    label: '3-MATRA SAM TIHAI',     h: 18 },
+  { id: 'bandT',   label: '3-MATRA BANDISH TIHAI', h: 18 },
+  { id: 'wave',    label: 'AUDIO',         h: 80 },
+];
+function stripLayout() {
+  const L = {};
+  let y = 0;
+  for (const s of STRIPS) {
+    if (s.id === 'wave' && !S.showWave) continue;
+    L[s.id] = { y, h: s.h, label: s.label };
+    y += s.h;
+  }
+  L.H = y;
+  return L;
+}
+
+// Tihai: three palas of P matras separated by gaps of G matras; the last matra of
+// the third pala is the landing matra (sam, or the bandish start).
+function drawTihai(ctx, s, X, k0, k1, isLanding, P, G, rgb, landLabel) {
+  const T = 3 * P + 2 * G;
+  if (!(P > 0) || !(G >= 0)) return;
+  ctx.font = '700 10px system-ui, sans-serif';
+  for (let k = k0; k <= k1 + Math.ceil(T); k++) {
+    if (!isLanding(k)) continue;
+    for (let i = 0; i < 3; i++) {
+      const a = k + 1 - T + i * (P + G), e = a + P;
+      const xa = X(timeOfK(a)), xe = X(timeOfK(e));
+      ctx.fillStyle = `rgba(${rgb},0.3)`;
+      ctx.fillRect(xa + 1, s.y + 3, Math.max(1, xe - xa - 2), s.h - 6);
+      ctx.fillStyle = `rgb(${rgb})`;
+      // a one-matra third pala is just the landing block, which carries its own label
+      if (!(i === 2 && P <= 1)) ctx.fillText(String(i + 1), xa + 5, s.y + s.h / 2);
+    }
+    // landing matra: the last block of pala 3, labelled inside so it lines up with the BANDISH flag
+    const xl = X(timeOfK(k)), xr = X(timeOfK(k + 1));
+    ctx.fillStyle = `rgba(${rgb},0.3)`;
+    ctx.fillRect(xl + 1, s.y + 3, Math.max(1, xr - xl - 2), s.h - 6);
+    ctx.fillStyle = `rgb(${rgb})`;
+    ctx.fillRect(xl - 1, s.y, 3, s.h);
+    // starts inside the block and may run past it: nothing else is drawn right after a landing
+    ctx.fillText(landLabel, xl + 5, s.y + s.h / 2);
+  }
+}
+
+function drawDetail(t, b) {
+  const L = stripLayout();
+  if (detail.style.height !== L.H + 'px') detail.style.height = L.H + 'px';
+  const { ctx, W, H } = fitCanvas(detail);
+  const { t0, win } = detailWindow();
+  const X = tt => (tt - t0) / win * W;
+  ctx.clearRect(0, 0, W, H);
+
+  const p = period(), pxPerBeat = p / win * W;
+  const k0 = Math.floor((t0 - S.offset) / p) - 1, k1 = Math.ceil((t0 + win - S.offset) / p) + 1;
+  const bodyY = 0, bodyH = H;   // static vibhag/khali shading spans every strip
+
+  // strip backgrounds
+  ctx.fillStyle = 'rgba(95,211,138,0.05)'; ctx.fillRect(0, L.bandish.y, W, L.bandish.h);
+  ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(0, L.matra.y, W, L.matra.h);
+  ctx.fillStyle = 'rgba(255,255,255,0.02)'; ctx.fillRect(0, L.laya.y, W, L.laya.h);
+
+  // vibhag shading + current/next beat
+  for (let k = k0; k <= k1; k++) {
+    const m = taal.matras[mod(k, taal.N)];
+    const x0 = X(timeOfK(k)), x1 = X(timeOfK(k + 1));
+    if (m.inKhali) { ctx.fillStyle = 'rgba(90,166,255,0.07)'; ctx.fillRect(x0, bodyY, x1 - x0, bodyH); }
+    else if (m.vIdx % 2) { ctx.fillStyle = 'rgba(255,255,255,0.025)'; ctx.fillRect(x0, bodyY, x1 - x0, bodyH); }
+    // the beat highlight lives only in the LAYA strip; every other strip stays static
+    if (k === b.k) { ctx.fillStyle = 'rgba(240,163,58,0.18)'; ctx.fillRect(x0, L.laya.y, x1 - x0, L.laya.h); }
+    if (k === b.k + 1) { ctx.fillStyle = `rgba(255,210,122,${0.04 + 0.14 * b.frac})`; ctx.fillRect(x0, L.laya.y, x1 - x0, L.laya.h); }
+  }
+
+  // AUDIO strip: waveform
+  if (L.wave && peaks) {
+    const mid = L.wave.y + L.wave.h / 2, amp = L.wave.h / 2 - 3, playX = X(t);
+    for (let px = 0; px < W; px++) {
+      const ta = t0 + px / W * win, tb = t0 + (px + 1) / W * win;
+      if (tb < 0 || ta > duration) continue;
+      const a = peakRange(ta, tb) * amp;
+      ctx.fillStyle = px < playX ? '#f0a33a' : '#7d6d58';
+      ctx.fillRect(px, mid - a, 1, Math.max(1, a * 2));
+    }
+  }
+
+  // LAYA strip: one block per division, the current one lit
+  const subW = pxPerBeat / S.subdiv;
+  for (let k = k0; k <= k1; k++) {
+    const m = taal.matras[mod(k, taal.N)];
+    for (let s = 0; s < S.subdiv; s++) {
+      const x0 = X(timeOfK(k) + s * p / S.subdiv);
+      const cur = k === b.k && s === Math.floor(b.frac * S.subdiv);
+      ctx.fillStyle = cur ? (m.sam ? '#ff5a36' : '#f0a33a')
+        : s === 0 ? (m.sam ? 'rgba(255,90,54,0.45)' : 'rgba(255,255,255,0.16)') : 'rgba(255,255,255,0.07)';
+      ctx.fillRect(x0 + 1, L.laya.y + 3, Math.max(1, subW - 2), L.laya.h - 6);
+    }
+  }
+  // division lines through the audio strip
+  if (L.wave && S.subdiv > 1 && subW > 5) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.beginPath();
+    for (let k = k0; k <= k1; k++) for (let s = 1; s < S.subdiv; s++) {
+      const x = Math.round(X(timeOfK(k) + s * p / S.subdiv)) + 0.5;
+      ctx.moveTo(x, L.wave.y); ctx.lineTo(x, L.wave.y + L.wave.h);
+    }
+    ctx.stroke();
+  }
+
+  // beat lines through every strip, MATRA strip labels
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  const labelY = L.matra.y + L.matra.h / 2;
+  for (let k = k0; k <= k1; k++) {
+    const mi = mod(k, taal.N), m = taal.matras[mi];
+    const x = Math.round(X(timeOfK(k))) + 0.5;
+    if (x < -60 || x > W + 60) continue;
+    ctx.setLineDash(m.khali ? [4, 3] : []);
+    ctx.strokeStyle = m.sam ? '#ff5a36' : m.khali ? '#5aa6ff' : m.vStart ? 'rgba(240,163,58,0.75)' : 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = m.sam ? 2.5 : m.vStart ? 1.5 : 1;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    ctx.setLineDash([]);
+    if (m.vStart || pxPerBeat > 18) {
+      const tag = m.vStart ? m.mark : String(mi + 1);
+      ctx.fillStyle = m.sam ? '#ff5a36' : m.khali ? '#5aa6ff' : m.vStart ? '#f0a33a' : '#a6957c';
+      ctx.font = (m.vStart ? '800 12px' : '500 10px') + ' system-ui, sans-serif';
+      ctx.fillText(tag, x + 4, labelY);
+      if (m.bol && pxPerBeat > 46) {
+        const tw = ctx.measureText(tag).width;
+        ctx.font = '500 10px system-ui, sans-serif'; ctx.fillStyle = '#c9b79c';
+        ctx.fillText(m.bol, x + 8 + tw, labelY);
+      }
+    }
+  }
+
+  // BANDISH strip: a flag at the bandish matra of every avartan
+  ctx.font = '700 10px system-ui, sans-serif';
+  for (let k = k0; k <= k1; k++) {
+    if (!isBandishK(k)) continue;
+    const x = Math.round(X(timeOfK(k)));
+    ctx.fillStyle = 'rgba(95,211,138,0.22)';
+    ctx.fillRect(x, L.bandish.y + 2, Math.max(pxPerBeat, 4), L.bandish.h - 4);
+    ctx.fillStyle = '#5fd38a'; ctx.fillRect(x - 1, L.bandish.y, 3, L.bandish.h);
+    ctx.fillText('Bandish', x + 5, L.bandish.y + L.bandish.h / 2);
+  }
+
+  // SAM TIHAI / BANDISH TIHAI strips
+  // 3-matra tihais: three palas of 3 matras (a triplet each), no gap = 9 matras,
+  // the last matra of the third pala lands on sam / the bandish matra
+  drawTihai(ctx, L.samT, X, k0, k1, k => mod(k, taal.N) === 0, 3, 0, '255,90,54', 'Sam');
+  drawTihai(ctx, L.bandT, X, k0, k1, isBandishK, 3, 0, '95,211,138', 'Bandish');
+
+  // strip separators + names
+  const ids = STRIPS.map(s => s.id).filter(id => L[id]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (const id of ids.slice(1)) { ctx.moveTo(0, L[id].y + 0.5); ctx.lineTo(W, L[id].y + 0.5); }
+  ctx.stroke();
+  ctx.font = '700 8px system-ui, sans-serif';
+  for (const id of ids) {
+    const s = L[id], tw = ctx.measureText(s.label).width;
+    ctx.fillStyle = 'rgba(16,13,10,0.8)'; ctx.fillRect(0, s.y + 1, tw + 8, 11);
+    ctx.fillStyle = '#7d6d58'; ctx.fillText(s.label, 4, s.y + 7);
+  }
+
+  // loop region
+  if (loop) {
+    ctx.fillStyle = 'rgba(240,163,58,0.9)';
+    ctx.fillRect(X(loop.a), H - 2, X(loop.b) - X(loop.a), 2);
+  }
+  // playhead
+  const px = Math.round(X(t)) + 0.5;
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke();
+}
+
+function drawOverview(t) {
+  const { ctx, W, H } = fitCanvas(overview);
+  ctx.clearRect(0, 0, W, H);
+  if (!peaks || !duration) return;
+  if (!overviewCache || overviewCache.length !== Math.floor(W)) {
+    overviewCache = new Float32Array(Math.floor(W));
+    for (let px = 0; px < overviewCache.length; px++)
+      overviewCache[px] = peakRange(px / W * duration, (px + 1) / W * duration);
+  }
+  const X = tt => tt / duration * W;
+  const playX = X(t), mid = H / 2;
+  for (let px = 0; px < overviewCache.length; px++) {
+    const a = overviewCache[px] * (H / 2 - 3);
+    ctx.fillStyle = px < playX ? '#b97d2c' : '#5a4e40';
+    ctx.fillRect(px, mid - a, 1, Math.max(1, a * 2));
+  }
+  // sam markers (only if not too dense)
+  const avLen = taal.N * period();
+  if (avLen / duration * W > 4) {
+    ctx.strokeStyle = 'rgba(255,90,54,0.5)'; ctx.lineWidth = 1; ctx.beginPath();
+    for (let ts = samTimeAt(0); ts <= duration; ts += avLen) if (ts >= 0) {
+      const x = Math.round(X(ts)) + 0.5; ctx.moveTo(x, 0); ctx.lineTo(x, 5); ctx.moveTo(x, H - 5); ctx.lineTo(x, H);
+    }
+    ctx.stroke();
+  }
+  // bandish markers, every avartan when there is room
+  if (avLen / duration * W > 4) {
+    ctx.fillStyle = '#5fd38a';
+    for (let tb = samTimeAt(0) + (S.bMatra - 1) * period() - avLen; tb <= duration; tb += avLen)
+      if (tb >= 0) ctx.fillRect(X(tb) - 0.5, 0, 1, H);
+  }
+  const { t0, win } = detailWindow();
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.strokeRect(X(t0) + 0.5, 0.5, win / duration * W, H - 1);
+  if (loop) { ctx.fillStyle = 'rgba(240,163,58,0.18)'; ctx.fillRect(X(loop.a), 0, X(loop.b) - X(loop.a), H); }
+  ctx.fillStyle = '#fff'; ctx.fillRect(Math.round(playX) - 1, 0, 2, H);
+}
+
+// ---------------------------------------------------------------------------
+// Per-frame update
+// ---------------------------------------------------------------------------
+const fmt = s => { if (!isFinite(s)) s = 0; const m = Math.floor(s / 60), r = s - m * 60; return m + ':' + r.toFixed(2).padStart(5, '0'); };
+
+function updateCountdown(b) {
+  const bd = $('bdCountdown');
+  // matras until the next bandish start (the first one, or the next avartan's)
+  const toB = mod(S.bMatra - 1 - b.m, taal.N);
+  if (toB === 0) { bd.innerHTML = '<b>BANDISH</b>'; bd.className = 'pill bd now'; }
+  else { bd.innerHTML = `Bandish in <b>${toB}</b>`; bd.className = 'pill bd' + (toB <= 3 ? ' soon' : ''); }
+
+  const cd = $('countdown');
+  if (b.m === 0) {
+    cd.innerHTML = '<b>SAM</b>'; cd.className = 'pill now';
+  } else {
+    const samIn = taal.N - b.m;
+    cd.innerHTML = `Sam in <b>${samIn}</b>`; cd.className = 'pill' + (samIn <= 3 ? ' soon' : '');
+  }
+}
+
+function frame() {
+  let t = audio.currentTime || 0;
+  if (loop && !audio.paused && t >= loop.b) { audio.currentTime = t = loop.a; scheduledK = null; }
+
+  const b = beatAt(t);
+  const nextM = (b.m + 1) % taal.N;
+
+  if (b.m !== lastCur) {
+    if (cells[lastCur]) cells[lastCur].classList.remove('current');
+    cells[b.m].classList.add('current');
+    $('matraNum').textContent = b.m + 1;
+    $('matraBol').textContent = taal.matras[b.m].bol;
+    if (b.m === 0 && !audio.paused && lastK !== null && b.k === lastK + 1) {
+      const pnl = $('taalPanel'); pnl.classList.remove('flash'); void pnl.offsetWidth; pnl.classList.add('flash');
+    }
+    lastCur = b.m;
+  }
+  if (nextM !== lastNext) {
+    if (cells[lastNext]) { cells[lastNext].classList.remove('next'); cells[lastNext].style.removeProperty('--p'); }
+    cells[nextM].classList.add('next');
+    lastNext = nextM;
+  }
+  // ease-in so the upcoming beat "fills up" visibly as it approaches
+  cells[nextM].style.setProperty('--p', (b.frac * b.frac).toFixed(3));
+
+  // subdivision dots on the current cell
+  const sd = Math.floor(b.frac * S.subdiv);
+  cells[b.m].querySelectorAll('.dots i').forEach((d, i) => d.classList.toggle('on', i <= sd));
+  if (lastK !== null && b.k !== lastK) cells.forEach((c, i) => { if (i !== b.m) c.querySelectorAll('.dots i.on').forEach(d => d.classList.remove('on')); });
+
+  $('avNum').textContent = b.av >= 1 ? b.av : '–';
+  updateCountdown(b);
+  $('avProgress').style.width = ((b.m + b.frac) / taal.N * 100).toFixed(2) + '%';
+  $('time').textContent = fmt(t) + ' / ' + fmt(duration).replace(/\.\d+$/, '');
+
+  scheduleClicks(t, b);
+  drawDetail(t, b);
+  drawOverview(t);
+  lastK = b.k;
+  requestAnimationFrame(frame);
+}
+
+// ---------------------------------------------------------------------------
+// Controls
+// ---------------------------------------------------------------------------
+function seek(t) {
+  audio.currentTime = Math.min(Math.max(t, 0), duration || audio.duration || 0);
+  scheduledK = null; lastK = null;
+}
+function seekToMatra(i) {
+  const b = beatAt(audio.currentTime);
+  seek(timeOfK(b.k - b.m + i));
+}
+function togglePlay() {
+  if (!audio.src) return;
+  ensureCtx();
+  if (audio.paused) audio.play(); else audio.pause();
+}
+function toggleLoop() {
+  if (loop) { loop = null; }
+  else {
+    const a = samTimeAt(audio.currentTime);
+    loop = { a, b: a + Number($('loopCount').value) * taal.N * period() };
+  }
+  $('loopBtn').classList.toggle('on', !!loop);
+}
+function refreshLoop() { if (loop) { loop = null; toggleLoop(); } }
+function setRepeat(on) {
+  S.repeat = on; audio.loop = on;
+  $('repeatBtn').classList.toggle('on', on);
+  save();
+}
+function setView(grid, wave) {
+  S.showGrid = grid; S.showWave = wave;
+  document.body.classList.toggle('no-grid', !grid);
+  $('gridBtn').classList.toggle('on', grid);
+  $('waveBtn').classList.toggle('on', wave);
+  save();
+}
+function shiftAvartan(dir) {
+  const avLen = taal.N * period();
+  const t = audio.currentTime;
+  const s = samTimeAt(t);
+  // going back within the first 0.5 s of an avartan jumps to the previous one
+  const target = dir < 0 ? (t - s < 0.5 ? s - avLen : s) : s + avLen;
+  seek(target);
+  if (loop) { const len = loop.b - loop.a, a = samTimeAt(target + 0.01); loop = { a, b: a + len }; }
+}
+function jumpToBandish() {
+  // back to the latest bandish start; pressed again right after it, go one avartan further back
+  const t = audio.currentTime, b = beatAt(t);
+  let k = b.k - mod(b.m - (S.bMatra - 1), taal.N);
+  if (t - timeOfK(k) < 0.5) k -= taal.N;
+  seek(Math.max(0, timeOfK(k)));
+}
+
+let taps = [];
+function tap() {
+  const now = performance.now();
+  if (taps.length && now - taps[taps.length - 1] > 2500) taps = [];
+  taps.push(now);
+  if (taps.length > 8) taps.shift();
+  if (taps.length >= 3) {
+    const iv = (taps[taps.length - 1] - taps[0]) / (taps.length - 1);
+    // taps are in real time; convert to audio time when slowed down
+    setBpm(Math.round(60000 / iv * audio.playbackRate * 10) / 10);
+  }
+  $('tapBtn').textContent = 'Tap ' + taps.length;
+  clearTimeout(tap.t); tap.t = setTimeout(() => $('tapBtn').textContent = 'Tap', 2500);
+}
+
+function setBpm(v) { S.bpm = v; $('bpm').value = v; applyRate(); save(); refreshLoop(); }
+// playback speed follows target / original; the beat grid stays in recording time so everything scales with it
+const targetBpm = () => S.targetBpm ?? S.bpm;
+function applyRate() {
+  const rate = Math.min(4, Math.max(0.25, targetBpm() / S.bpm));
+  audio.defaultPlaybackRate = rate;   // survives loading a new file
+  audio.playbackRate = rate;
+  $('targetBpm').value = targetBpm();
+  $('speedOut').textContent = rate.toFixed(2) + '×';
+  $('bpmInfo').textContent = Math.round(targetBpm() * 10) / 10 + ' bpm';
+  scheduledK = null;
+}
+function setOffset(v) { S.offset = Math.round(v * 1000) / 1000; $('offset').value = S.offset; save(); refreshLoop(); }
+// re-align the grid so the nearest sam is "now", without changing avartan numbering
+function resyncSam() {
+  const avLen = taal.N * period(), t = audio.currentTime;
+  setOffset(S.offset + (t - timeOfK(Math.round((t - S.offset) / avLen) * taal.N)));
+}
+
+function rebuild() { buildTaal(); renderTaal(); }
+
+function syncInputs() {
+  $('taalSel').value = S.taal;
+  $('bpm').value = S.bpm;
+  $('offset').value = S.offset;
+  $('subdiv').value = S.subdiv;
+  $('clickMode').value = S.clickMode;
+  $('winAv').value = S.winAv;
+  applyRate();
+  audio.loop = S.repeat;
+  audio.volume = S.volume; $('volume').value = S.volume;
+  $('repeatBtn').classList.toggle('on', S.repeat);
+  document.body.classList.toggle('no-grid', !S.showGrid);
+  $('gridBtn').classList.toggle('on', S.showGrid);
+  $('waveBtn').classList.toggle('on', S.showWave);
+  $('cVibhags').value = S.custom.vibhags;
+  $('cMarks').value = S.custom.marks;
+  $('cBols').value = S.custom.bols;
+  $('customBox').classList.toggle('show', S.taal === 'custom');
+}
+
+$('taalSel').innerHTML = Object.entries(TAALS).map(([k, v]) => `<option value="${k}">${v.name}</option>`).join('');
+$('taalSel').addEventListener('change', e => {
+  const prev = TAALS[S.taal];
+  S.taal = e.target.value;
+  if (S.taal === 'custom' && prev && prev.vibhags) {
+    // prefill custom from the previously selected preset so it can be tweaked
+    S.custom = { vibhags: prev.vibhags.join('+'), marks: prev.marks, bols: prev.bols };
+  }
+  S.bMatra = 1; syncInputs(); rebuild(); save(); refreshLoop();
+});
+$('bpm').addEventListener('input', e => { const v = parseFloat(e.target.value); if (v > 0) { S.bpm = v; applyRate(); save(); refreshLoop(); } });
+$('targetBpm').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  if (!(v > 0)) return;
+  S.targetBpm = v;
+  // keep typing undisturbed: only refresh the readouts, not this input
+  const rate = Math.min(4, Math.max(0.25, v / S.bpm));
+  audio.defaultPlaybackRate = audio.playbackRate = rate;
+  $('speedOut').textContent = rate.toFixed(2) + '×';
+  $('bpmInfo').textContent = v + ' bpm';
+  scheduledK = null; save();
+});
+$('targetBpm').addEventListener('change', applyRate);
+$('resetTarget').addEventListener('click', () => { S.targetBpm = null; applyRate(); save(); });
+$('offset').addEventListener('input', e => { const v = parseFloat(e.target.value); if (isFinite(v)) { S.offset = v; save(); refreshLoop(); } });
+$('bMatra').addEventListener('input', e => { S.bMatra = Number(e.target.value); markBandishCell(); save(); });
+$('subdiv').addEventListener('change', e => { S.subdiv = Number(e.target.value); renderTaal(); save(); });
+$('clickMode').addEventListener('change', e => { S.clickMode = e.target.value; ensureCtx(); save(); });
+$('winAv').addEventListener('change', e => { S.winAv = Number(e.target.value); save(); });
+['cVibhags', 'cMarks', 'cBols'].forEach(id => $(id).addEventListener('input', () => {
+  S.custom = { vibhags: $('cVibhags').value, marks: $('cMarks').value, bols: $('cBols').value };
+  rebuild(); save();
+}));
+
+$('openBtn').addEventListener('click', () => $('file').click());
+$('file').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
+let trackValue = '';   // the current track, to restore when "Open a file…" is cancelled
+$('trackSel').addEventListener('focus', e => trackValue = e.target.value);
+$('trackSel').addEventListener('change', e => {
+  const v = e.target.value;
+  if (v === 'open') { e.target.value = trackValue; $('file').click(); }
+  else if (v.startsWith('stock:')) loadStock(Number(v.slice(6)));
+  e.target.blur();   // keep Space and the other shortcuts working
+});
+$('playBtn').addEventListener('click', togglePlay);
+$('markBtn').addEventListener('click', () => setOffset(audio.currentTime));
+$('tapBtn').addEventListener('click', tap);
+$('loopBtn').addEventListener('click', toggleLoop);
+$('repeatBtn').addEventListener('click', () => setRepeat(!S.repeat));
+function setVolume(v) { S.volume = Math.min(1, Math.max(0, Math.round(v * 100) / 100)); audio.volume = S.volume; $('volume').value = S.volume; save(); }
+$('volume').addEventListener('input', e => setVolume(Number(e.target.value)));
+// release focus after dragging so Space and the other shortcuts keep working
+$('volume').addEventListener('change', e => e.target.blur());
+$('gridBtn').addEventListener('click', () => setView(!S.showGrid, S.showWave));
+$('waveBtn').addEventListener('click', () => setView(S.showGrid, !S.showWave));
+$('loopCount').addEventListener('change', refreshLoop);
+$('backAv').addEventListener('click', () => shiftAvartan(-1));
+$('fwdAv').addEventListener('click', () => shiftAvartan(1));
+$('toBandish').addEventListener('click', jumpToBandish);
+audio.addEventListener('play', () => { $('playBtn').textContent = 'Pause'; scheduledK = null; });
+audio.addEventListener('pause', () => $('playBtn').textContent = 'Play');
+// covers the jump back to 0:00 when the whole track repeats
+audio.addEventListener('seeked', () => { scheduledK = null; lastK = null; });
+// playable as soon as the audio element knows the track, even before (or without) the waveform
+audio.addEventListener('loadedmetadata', () => { if (!duration) duration = audio.duration; $('playBtn').disabled = false; applyRate(); });
+
+// click / drag on canvases to seek
+function canvasSeek(canvas, toTime) {
+  let down = false;
+  const go = e => { const r = canvas.getBoundingClientRect(); seek(toTime((e.clientX - r.left) / r.width)); };
+  canvas.addEventListener('pointerdown', e => { if (!duration) return; down = true; canvas.setPointerCapture(e.pointerId); go(e); });
+  canvas.addEventListener('pointermove', e => { if (down) go(e); });
+  canvas.addEventListener('pointerup', () => down = false);
+}
+canvasSeek(overview, f => f * duration);
+canvasSeek(detail, f => { const { t0, win } = detailWindow(); return t0 + f * win; });
+
+// drag & drop
+let dragDepth = 0;
+window.addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; document.body.classList.add('dragging'); });
+window.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => {
+  e.preventDefault(); dragDepth = 0; document.body.classList.remove('dragging');
+  const f = [...e.dataTransfer.files].find(f => f.type.startsWith('audio') || /\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(f.name));
+  loadFile(f);
+});
+
+// help dialog
+const help = $('help');
+$('helpBtn').addEventListener('click', () => help.showModal());
+$('helpClose').addEventListener('click', () => help.close());
+// click on the dark backdrop (outside the dialog box) closes it
+help.addEventListener('click', e => { if (e.target === help) help.close(); });
+help.addEventListener('close', () => $('helpBtn').blur());
+
+// keyboard
+window.addEventListener('keydown', e => {
+  if (help.open) return;   // Esc is handled by the dialog itself
+  if (e.target.matches('input, select, textarea')) return;
+  switch (e.key) {
+    case '?': e.preventDefault(); help.showModal(); break;
+    case ' ': e.preventDefault(); togglePlay(); break;
+    case 'ArrowLeft':  e.preventDefault(); e.shiftKey ? shiftAvartan(-1) : seek(audio.currentTime - 2); break;
+    case 'ArrowRight': e.preventDefault(); e.shiftKey ? shiftAvartan(1) : seek(audio.currentTime + 2); break;
+    case 's': case 'S': setOffset(audio.currentTime); break;
+    case 'r': case 'R': resyncSam(); break;
+    case 'b': case 'B': jumpToBandish(); break;
+    case '[': setOffset(S.offset - 0.01); break;
+    case ']': setOffset(S.offset + 0.01); break;
+    case '-': setBpm(Math.round((S.bpm - 0.1) * 10) / 10); break;
+    case '=': case '+': setBpm(Math.round((S.bpm + 0.1) * 10) / 10); break;
+    case 't': case 'T': tap(); break;
+    case 'l': case 'L': toggleLoop(); break;
+    case 'p': case 'P': setRepeat(!S.repeat); break;
+    case 'ArrowUp':   e.preventDefault(); setVolume(S.volume + 0.05); break;
+    case 'ArrowDown': e.preventDefault(); setVolume(S.volume - 0.05); break;
+    case 'm': case 'M': setView(!S.showGrid, S.showWave); break;
+    case 'w': case 'W': setView(S.showGrid, !S.showWave); break;
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+const last = load('taal:last');
+if (last) S = withDefaults(last);
+syncInputs();
+rebuild();
+buildTrackList();
+requestAnimationFrame(frame);
+// start with the stock track used last time (or the first one); the user's own files can't be reopened automatically
+{
+  const lastTrack = load('taal:lastTrack');
+  const i = STOCK.findIndex(t => t.file === lastTrack);
+  if (i >= 0 || (lastTrack === null && localStorage.getItem('taal:lastTrack') === null && STOCK.length)) loadStock(Math.max(i, 0));
+}
+</script>
+</body>
+</html>
