@@ -436,7 +436,7 @@ const audio = $('audio');
 // offset = time (s) of avartan 1's sam; bMatra = matra the bandish starts on (every avartan)
 // bpm = tempo of the recording; targetBpm = practice tempo (null = same as bpm); speed follows target / bpm
 const DEFAULTS = { taal: 'teentaal', bpm: 80, targetBpm: null, offset: 0, bMatra: 1, subdiv: 1, clickMode: 'off',
-                   winAv: 2, volume: 1, repeat: false, showGrid: true, showWave: true, custom: { vibhags: '4+4+4+4', marks: 'X 2 0 3', bols: '' } };
+                   winAv: 2, volume: 1, repeat: false, showGrid: false, showWave: false, custom: { vibhags: '4+4+4+4', marks: 'X 2 0 3', bols: '' } };
 let S = structuredClone(DEFAULTS);
 let fileKey = null;
 
