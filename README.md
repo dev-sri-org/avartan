@@ -3,7 +3,9 @@
 A single-page taal practice player that runs entirely in the browser.
 
 ## Run locally
-Open `avartan.html` in a browser (or serve the folder, e.g. `python -m http.server`).
+Double-click `start-avartan.bat` (Windows). It serves the folder with Python and opens
+http://localhost:8000/avartan.html. Opening `avartan.html` directly from disk works too, but the browser then blocks
+the stock tracks and the waveform.
 
 ## Tracks (JSON)
 Each stock track is a JSON file in `tracks/`, next to its audio, and listed in `tracks/index.json`:

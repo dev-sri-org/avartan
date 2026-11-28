@@ -430,8 +430,9 @@
       <li><b>Use one</b>: <b>⬆ Load JSON</b> (or drop the .json, with or without its audio, on the page). If that audio is
         already open, or is a stock track, it is used straight away; otherwise you are asked to choose the audio file.</li>
       <li><b>Stock tracks</b> are track files in the site's <code>tracks/</code> folder, listed in <code>tracks/index.json</code>.
-        They need the page to be served (GitHub Pages, or <code>python -m http.server</code>); opened straight from disk the
-        stock list is empty, but your own audio and track files still work.</li>
+        They need the page to be served: use GitHub Pages, or on your computer double-click <code>start-avartan.bat</code> in the
+        Avartan folder (it runs <code>python -m http.server</code> and opens the page). Opened straight from disk the stock list
+        is empty and there is no waveform, but your own audio and track files still work.</li>
     </ul>
 
     <h3>8 · Custom taal</h3>
@@ -758,7 +759,7 @@ async function loadSource({ key, url, getBytes, preset, override, audio: audioNa
     // Browsers block reading files next to a page opened straight from disk (file://).
     // The track still plays through the audio element; only the waveform is missing.
     if (location.protocol === 'file:') {
-      $('drop').textContent = 'Playing without the waveform: the browser does not let a page opened from disk read files beside it. Open your own file instead, or serve this folder (e.g. python -m http.server) to see the waveform.';
+      $('drop').textContent = 'Playing without the waveform: the browser does not let a page opened from disk read files beside it. Open your own file instead, or double-click start-avartan.bat in this folder to see the waveform.';
       noWaveFromDisk = true;
       syncDropNotice();
     } else {
@@ -800,7 +801,7 @@ async function loadStockList() {
       } catch (e) { console.warn('Skipping stock track', p, e); return null; }
     }))).filter(Boolean);
   } catch (e) {
-    stockError = location.protocol === 'file:' ? 'Stock tracks need the page served (see Help)' : 'Could not load the stock tracks';
+    stockError = location.protocol === 'file:' ? 'Stock tracks: open with start-avartan.bat (see Help)' : 'Could not load the stock tracks';
   }
   buildTrackList();
 }
