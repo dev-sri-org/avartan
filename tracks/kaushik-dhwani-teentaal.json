@@ -1,0 +1,31 @@
+{
+  "format": "avartan-track",
+  "version": 1,
+  "title": "Kaushik Dhwani · Teentaal",
+  "audio": "Kaushik_Dhwani_Teen_Taal.mp3",
+  "settings": {
+    "taal": "teentaal",
+    "bpm": 80,
+    "offset": 0,
+    "bMatra": 1,
+    "subdiv": 1,
+    "lanes": [
+      {
+        "type": "marker",
+        "at": "bandish"
+      },
+      {
+        "type": "tihai",
+        "pala": 3,
+        "gap": 0,
+        "land": "sam"
+      },
+      {
+        "type": "tihai",
+        "pala": 3,
+        "gap": 0,
+        "land": "bandish"
+      }
+    ]
+  }
+}

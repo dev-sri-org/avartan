@@ -1,0 +1,31 @@
+{
+  "format": "avartan-track",
+  "version": 1,
+  "title": "Kaushik Dhwani · Vilambit Ektaal",
+  "audio": "Kaushik_Dhwani_Vilambit_Ektal.mp3",
+  "settings": {
+    "taal": "vilambitektaal",
+    "bpm": 15,
+    "offset": 0,
+    "bMatra": 1,
+    "subdiv": 4,
+    "lanes": [
+      {
+        "type": "marker",
+        "at": "bandish"
+      },
+      {
+        "type": "tihai",
+        "pala": 3,
+        "gap": 0,
+        "land": "sam"
+      },
+      {
+        "type": "tihai",
+        "pala": 3,
+        "gap": 0,
+        "land": "bandish"
+      }
+    ]
+  }
+}

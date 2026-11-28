@@ -30,8 +30,25 @@
   .top { display: flex; align-items: center; gap: 10px; margin: 2px 2px 8px; }
   h1 { font-size: 16px; margin: 0; }
   h1 small { color: var(--muted); font-size: 12px; font-weight: 500; margin-left: 6px; }
+  /* track bar, notice and lane editor */
+  .note { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 5px 8px; border-radius: 6px;
+    border: 1px solid var(--accent); background: rgba(240,163,58,.08); font-size: 12px; }
+  .note.hidden { display: none; }
+  .note + .bar { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); }
+  .note.err { border-color: var(--sam); background: rgba(255,90,54,.08); }
+  .note span { flex: 1; }
+  input.title-in { width: 200px; }
+  .lanes-bar { align-items: center; }
+  .lane-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lane { display: flex; align-items: center; gap: 4px; padding: 2px 3px 2px 7px; border: 1px solid var(--line);
+    border-left: 3px solid var(--c, var(--line)); border-radius: 7px; font-size: 11px; color: var(--muted); }
+  .lane .kind { font-size: 10px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: rgb(var(--rgb)); }
+  .lane input[type=number] { width: 44px; }
+  .lane input.lname { width: 96px; }
+  .lane select { max-width: 104px; }
+  .lane .del { width: 24px; padding: 0; }
   /* zen mode: only the player bar, status, matra boxes and beat view */
-  body.zen .cfg, body.zen .custom.show, body.zen details, body.zen .top small,
+  body.zen .cfg, body.zen .cfg-note, body.zen .custom.show, body.zen details, body.zen .top small,
   body.zen .player-bar .sec-name { display: none; }
   body.zen .player-bar { margin-top: 0; padding-top: 0; border-top: none; }
   .zen-btn { width: 28px; height: 28px; padding: 0; border-radius: 50%; color: var(--accent);
@@ -191,16 +208,29 @@
   </div>
 
   <section class="panel">
-    <!-- TAAL: recording, taal and laya -->
+    <!-- TRACK: audio + track file (JSON) -->
     <div class="bar cfg">
-      <span class="sec-name">Taal</span>
+      <span class="sec-name">Track</span>
       <input type="file" id="file" accept="audio/*" hidden>
-      <label title="Pick a stock track, or open / drop your own recording">Track
+      <input type="file" id="jsonFile" accept=".json,application/json" hidden>
+      <label title="Pick a stock track, or open / drop your own recording or track file">Track
         <span class="grp">
           <select id="trackSel" class="track"></select>
-          <button id="openBtn" title="Open your own audio file (or drop it on the page)">📂 Your own…</button>
+          <button id="openBtn" title="Open your own audio file (or drop it on the page)">📂 Audio…</button>
         </span>
       </label>
+      <label title="Name saved in the track file">Title <input id="trackTitle" class="title-in" placeholder="Track title"></label>
+      <span class="grp">
+        <button id="loadJsonBtn" title="Load a track file (.json): its taal, tempo, sam, bandish and lanes, then its audio">⬆ Load JSON</button>
+        <button id="saveJsonBtn" title="Download this track's settings and lanes as a .json track file">⬇ Save JSON</button>
+      </span>
+    </div>
+    <div class="note hidden cfg-note" id="trackNote"><span id="trackNoteText"></span>
+      <button id="trackNoteBtn" hidden></button><button id="trackNoteClose" title="Dismiss">✕</button></div>
+
+    <!-- TAAL: taal and laya -->
+    <div class="bar cfg">
+      <span class="sec-name">Taal</span>
       <label>Taal <select id="taalSel"></select></label>
       <label title="Tempo of the recording as it was played">Original BPM
         <span class="grp"><input type="number" id="bpm" min="10" max="800" step="0.1" value="80"><button id="tapBtn" title="Tap tempo: tap this button (or T) on every matra while the audio plays; after 3 taps the original BPM is set from your tapping">Tap</button></span>
@@ -233,7 +263,16 @@
       <label>Starts on matra
         <select id="bMatra" title="Matra the bandish starts on (marked in every avartan)"></select>
       </label>
-      <span class="muted" style="align-self:center">3-matra tihais land on sam and on the bandish matra</span>
+    </div>
+
+    <!-- LANES: marker and tihai strips in the beat view -->
+    <div class="bar cfg lanes-bar">
+      <span class="sec-name">Lanes</span>
+      <div class="lane-list" id="laneList"></div>
+      <span class="grp">
+        <button id="addMarker" title="Add a lane that flags one matra in every avartan">+ Marker</button>
+        <button id="addTihai" title="Add a lane that shows where a tihai must start to land on a matra">+ Tihai</button>
+      </span>
     </div>
 
     <!-- PLAYER: transport and display -->
@@ -349,6 +388,12 @@
     </ul>
     <p><b>⇤ Bandish</b> (<kbd>B</kbd>) jumps back to the latest bandish start; press it again to go one more avartan back.</p>
 
+    <h4>Lanes</h4>
+    <p>The <b>Lanes</b> row lists the strips drawn in the beat view between LAYA and AUDIO. <b>+ Marker</b> adds a lane that flags
+      one matra in every avartan; <b>+ Tihai</b> adds a lane showing where a tihai must start: three palas of <i>N</i> matras with
+      a gap of <i>G</i> matras between them, landing on sam, the bandish matra or any matra. Give a lane a name if you like;
+      <b>✕</b> deletes it. Lanes are saved with the track.</p>
+
     <h3>5 · Reading the display</h3>
     <table>
       <tr><td><b>Matra boxes</b></td><td>One box per matra, grouped by vibhag, each showing its tali mark, bol and number.
@@ -358,8 +403,8 @@
         <span class="k-bd">Bandish in</span> / <span class="k-sam">Sam in</span> countdowns (they glow in the last 3 matras). The
         panel flashes on every sam.</td></tr>
       <tr><td><b>Beat view</b></td><td>A scrolling timeline; the white line is the playhead. Strips from top to bottom:
-        <b>MATRA</b> (numbers, marks, bols) · <b>LAYA</b> (one block per division, current lit) · <b>BANDISH</b> ·
-        <b>3-MATRA SAM TIHAI</b> · <b>3-MATRA BANDISH TIHAI</b> · <b>AUDIO</b> waveform. Click or drag on it to seek.</td></tr>
+        <b>MATRA</b> (numbers, marks, bols) · <b>LAYA</b> (one block per division, current lit) · your <b>lanes</b>
+        (by default a BANDISH marker and 3-matra tihais onto sam and the bandish) · <b>AUDIO</b> waveform. Click or drag on it to seek.</td></tr>
       <tr><td><b>Overview</b></td><td>The whole track, with sam ticks in red and bandish lines in green. The box shows the part
         visible above. Click or drag to seek anywhere.</td></tr>
     </table>
@@ -376,7 +421,20 @@
       <li>🔊 Volume (<kbd>↑</kbd>/<kbd>↓</kbd>).</li>
     </ul>
 
-    <h3>7 · Custom taal</h3>
+    <h3>7 · Track files (JSON)</h3>
+    <p>A track file holds everything about one recording: its taal, original and target tempo, avartan 1 sam, bandish matra,
+      divisions and lanes, plus the name of its audio file.</p>
+    <ul>
+      <li><b>Build one</b>: open your audio (<b>📂 Audio…</b>), set it up, give it a <b>Title</b> and press <b>⬇ Save JSON</b>.
+        Keep the .json next to the audio file.</li>
+      <li><b>Use one</b>: <b>⬆ Load JSON</b> (or drop the .json, with or without its audio, on the page). If that audio is
+        already open, or is a stock track, it is used straight away; otherwise you are asked to choose the audio file.</li>
+      <li><b>Stock tracks</b> are track files in the site's <code>tracks/</code> folder, listed in <code>tracks/index.json</code>.
+        They need the page to be served (GitHub Pages, or <code>python -m http.server</code>); opened straight from disk the
+        stock list is empty, but your own audio and track files still work.</li>
+    </ul>
+
+    <h3>8 · Custom taal</h3>
     <p>Choose <b>Custom…</b> and fill in three fields (picking Custom right after a preset copies that preset so you can tweak it):</p>
     <ul>
       <li><b>Vibhags</b>: matras per vibhag, e.g. <code>3+2+2</code> for 7 matras.</li>
@@ -441,17 +499,61 @@ const TAALS = {
 };
 
 // ---------------------------------------------------------------------------
-// Stock tracks: mp3 files that sit in the same folder as this page.
-// To add one, copy the file next to avartan.html and add a line here.
-//   file:   file name (relative to this page)
-//   title:  what the user sees in the Track list
-//   preset: optional starting settings for the track (taal, bpm, offset, bMatra…);
-//           once the user changes anything, their own settings for the track win
+// Track files (JSON). Stock tracks live in tracks/: one .json per track, listed in
+// tracks/index.json, with its audio file next to it. A track file looks like
+//   { "format": "avartan-track", "version": 1, "title": "…", "audio": "file.mp3",
+//     "settings": { "taal": "teentaal", "bpm": 80, "offset": 0, "bMatra": 1, "subdiv": 1, "lanes": [ … ] } }
+// "audio" is relative to the .json file. To add a stock track: build it in the page, Save JSON,
+// put the .json and its audio in tracks/ and add the .json to tracks/index.json.
+// Once the user changes anything, their own settings for the track (kept in the browser) win.
 // ---------------------------------------------------------------------------
-const STOCK = [
-  { file: 'Kaushik_Dhwani_Teen_Taal.mp3', title: 'Kaushik Dhwani · Teentaal', preset: { taal: 'teentaal' } },
-  { file: 'Kaushik_Dhwani_Vilambit_Ektal.mp3', title: 'Kaushik Dhwani · Vilambit Ektaal', preset: { taal: 'vilambitektaal', bpm: 15, subdiv: 4 } },
+const TRACK_FORMAT = 'avartan-track';
+// the settings that belong to a track (view preferences such as volume stay in the browser)
+const TRACK_KEYS = ['taal', 'custom', 'bpm', 'targetBpm', 'offset', 'bMatra', 'subdiv', 'clickMode', 'winAv', 'repeat', 'lanes'];
+// Lanes: extra strips in the beat view, between LAYA and AUDIO.
+//   marker: { type: 'marker', at, label? }              flags one matra every avartan
+//   tihai:  { type: 'tihai', pala, gap, land, label? }  three palas of `pala` matras, `gap` apart, landing on `land`
+// at / land: 'sam', 'bandish' (the Starts-on-matra setting) or a matra number
+const DEFAULT_LANES = [
+  { type: 'marker', at: 'bandish' },
+  { type: 'tihai', pala: 3, gap: 0, land: 'sam' },
+  { type: 'tihai', pala: 3, gap: 0, land: 'bandish' },
 ];
+let STOCK = [];           // [{ title, audio, audioUrl, settings }] from tracks/index.json
+let stockError = '';
+const basename = p => String(p || '').split(/[\\/]/).pop();
+const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clampInt = (v, lo, hi, dflt) => { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : dflt; };
+const laneTarget = v => (v === 'sam' || v === 'bandish') ? v : (Number.isInteger(Number(v)) && Number(v) >= 1 ? Number(v) : 'sam');
+function sanitizeLanes(arr) {
+  if (!Array.isArray(arr)) return structuredClone(DEFAULT_LANES);
+  return arr.slice(0, 20).map(l => {
+    if (!l || typeof l !== 'object') return null;
+    const label = typeof l.label === 'string' ? l.label.slice(0, 40) : '';
+    if (l.type === 'marker') return { type: 'marker', at: laneTarget(l.at), ...(label && { label }) };
+    if (l.type === 'tihai') return { type: 'tihai', pala: clampInt(l.pala, 1, 32, 3), gap: clampInt(l.gap, 0, 32, 0),
+                                     land: laneTarget(l.land), ...(label && { label }) };
+    return null;
+  }).filter(Boolean);
+}
+// read a track file: keeps only known settings; throws with a readable message if it isn't one
+function parseTrack(text) {
+  let j;
+  try { j = JSON.parse(text); } catch (e) { throw new Error('This file is not valid JSON.'); }
+  if (!j || typeof j !== 'object' || !j.settings || typeof j.settings !== 'object')
+    throw new Error('This is not an Avartan track file (it has no "settings").');
+  const settings = {};
+  for (const k of TRACK_KEYS) if (j.settings[k] !== undefined) settings[k] = j.settings[k];
+  if (settings.taal !== undefined && !TAALS[settings.taal]) delete settings.taal;
+  for (const k of ['bpm', 'offset', 'bMatra', 'subdiv', 'winAv'])
+    if (settings[k] !== undefined && !Number.isFinite(Number(settings[k]))) delete settings[k]; else if (settings[k] !== undefined) settings[k] = Number(settings[k]);
+  if (settings.bpm !== undefined && !(settings.bpm > 0)) delete settings.bpm;
+  if (settings.targetBpm !== undefined && settings.targetBpm !== null && !(Number(settings.targetBpm) > 0)) delete settings.targetBpm;
+  if (settings.custom !== undefined && (typeof settings.custom !== 'object' || !settings.custom)) delete settings.custom;
+  if (settings.custom) settings.custom = { vibhags: String(settings.custom.vibhags ?? '4+4+4+4'), marks: String(settings.custom.marks ?? 'X 2 0 3'), bols: String(settings.custom.bols ?? '') };
+  if (settings.lanes !== undefined) settings.lanes = sanitizeLanes(settings.lanes);
+  return { title: typeof j.title === 'string' ? j.title.slice(0, 120) : '', audio: typeof j.audio === 'string' ? j.audio : '', settings };
+}
 
 // ---------------------------------------------------------------------------
 // State
@@ -462,9 +564,12 @@ const audio = $('audio');
 // bpm = tempo of the recording; targetBpm = practice tempo (null = same as bpm); speed follows target / bpm
 const PHONE = window.matchMedia('(max-width: 640px)').matches;
 const DEFAULTS = { taal: 'teentaal', bpm: 80, targetBpm: null, offset: 0, bMatra: 1, subdiv: 1, clickMode: 'off',
-                   winAv: PHONE ? 1 : 2, volume: 1, repeat: true, showGrid: false, showWave: false, custom: { vibhags: '4+4+4+4', marks: 'X 2 0 3', bols: '' } };
+                   winAv: PHONE ? 1 : 2, volume: 1, repeat: true, showGrid: false, showWave: false, custom: { vibhags: '4+4+4+4', marks: 'X 2 0 3', bols: '' },
+                   lanes: DEFAULT_LANES, title: '' };
 let S = structuredClone(DEFAULTS);
 let fileKey = null;
+let currentAudio = '';    // audio file name of the loaded track, written into Save JSON
+let pendingTrack = null;  // a loaded track file waiting for its audio
 
 let taal = null;          // { N, matras:[{bol, mark, vStart, vIdx, sam, khali}] }
 let cells = [];
@@ -483,6 +588,8 @@ function withDefaults(o) {
   // ...and a speed selector instead of a target tempo
   if (o && o.targetBpm === undefined && o.speed && o.speed !== 1) s.targetBpm = Math.round(s.bpm * o.speed * 10) / 10;
   delete s.speed; delete s.bAv;
+  s.lanes = sanitizeLanes(s.lanes);
+  if (typeof s.title !== 'string') s.title = '';
   return s;
 }
 
@@ -573,26 +680,32 @@ function ensureCtx() {
 // The user's own file (from the Open button or drag & drop)
 function loadFile(file) {
   if (!file) return;
-  setOwnTrackOption(file.name);
+  // a track file loaded before its audio: its settings apply to this audio
+  const tr = pendingTrack; pendingTrack = null; hideNote();
+  setOwnTrackOption(tr && tr.title || file.name);
   store('taal:lastTrack', null);
-  return loadSource({ key: file.name + ':' + file.size, url: URL.createObjectURL(file), getBytes: () => file.arrayBuffer() });
+  return loadSource({ key: file.name + ':' + file.size, url: URL.createObjectURL(file), getBytes: () => file.arrayBuffer(),
+    audio: file.name, title: file.name.replace(/\.[^.]+$/, ''),
+    override: tr && { ...tr.settings, title: tr.title || file.name.replace(/\.[^.]+$/, '') } });
 }
 
-// A stock track from the STOCK list
-function loadStock(i) {
+// A stock track from tracks/index.json; `tr` (a loaded track file) replaces its settings
+function loadStock(i, tr) {
   const t = STOCK[i];
   if (!t) return;
   $('trackSel').value = 'stock:' + i;
-  store('taal:lastTrack', t.file);
-  const url = encodeURI(t.file);
+  store('taal:lastTrack', basename(t.audio));
+  const url = t.audioUrl;
   return loadSource({
-    key: 'stock:' + t.file, url, preset: t.preset,
+    key: 'stock:' + basename(t.audio), url, preset: { ...t.settings, title: t.title },
+    audio: basename(t.audio), title: t.title,
+    override: tr && { ...tr.settings, title: tr.title || t.title },
     getBytes: async () => { const r = await fetch(url); if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); },
   });
 }
 
 let loadSeq = 0;
-async function loadSource({ key, url, getBytes, preset }) {
+async function loadSource({ key, url, getBytes, preset, override, audio: audioName, title }) {
   const seq = ++loadSeq;   // a newer load cancels the result of an older one
   ensureCtx();
   noWaveFromDisk = false;
@@ -602,11 +715,16 @@ async function loadSource({ key, url, getBytes, preset }) {
   audio.pause();
   peaks = null; duration = 0; overviewCache = null;
   fileKey = key;
-  // the user's saved settings for this track win; otherwise start from the track's preset
+  currentAudio = audioName || '';
+  // a track file the user just loaded wins; then their saved settings for this track; then the track's preset
   const saved = load('taal:file:' + fileKey);
-  if (saved) S = withDefaults(saved);
-  else S = withDefaults({ ...S, offset: 0, targetBpm: null, bMatra: 1, ...(preset || {}) });
+  const view = { volume: S.volume, showGrid: S.showGrid, showWave: S.showWave };
+  if (override) S = withDefaults({ ...S, ...view, offset: 0, targetBpm: null, bMatra: 1, lanes: DEFAULT_LANES, ...override });
+  else if (saved) S = withDefaults(saved);
+  else S = withDefaults({ ...S, offset: 0, targetBpm: null, bMatra: 1, lanes: DEFAULT_LANES, title: '', ...(preset || {}) });
+  if (!S.title) S.title = title || '';
   syncInputs(); rebuild();
+  if (override) save();
 
   if (audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src);
   audio.src = url;
@@ -659,8 +777,83 @@ function buildTrackList() {
   const sel = $('trackSel');
   sel.innerHTML = '<option value="" disabled selected>Choose a track…</option>' +
     (STOCK.length ? '<optgroup label="Stock tracks">' +
-      STOCK.map((t, i) => `<option value="stock:${i}">${t.title}</option>`).join('') + '</optgroup>' : '') +
-    '<optgroup label="Your own" id="ownGroup"><option value="open">📂 Open a file…</option></optgroup>';
+      STOCK.map((t, i) => `<option value="stock:${i}">${esc(t.title)}</option>`).join('') + '</optgroup>'
+      : stockError ? `<optgroup label="Stock tracks"><option disabled>${esc(stockError)}</option></optgroup>` : '') +
+    '<optgroup label="Your own" id="ownGroup"><option value="open">📂 Open an audio file…</option>' +
+    '<option value="openJson">📄 Open a track file (.json)…</option></optgroup>';
+}
+// fetch the stock track files listed in tracks/index.json
+async function loadStockList() {
+  try {
+    const base = new URL('tracks/', location.href);
+    const r = await fetch(new URL('index.json', base), { cache: 'no-cache' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const idx = await r.json();
+    STOCK = (await Promise.all((idx.tracks || []).map(async p => {
+      try {
+        const u = new URL(p, base);
+        const rt = await fetch(u, { cache: 'no-cache' });
+        if (!rt.ok) throw new Error('HTTP ' + rt.status);
+        const t = parseTrack(await rt.text());
+        if (!t.audio) throw new Error('no "audio"');
+        return { title: t.title || basename(t.audio), audio: t.audio, audioUrl: new URL(t.audio, u).href, settings: t.settings };
+      } catch (e) { console.warn('Skipping stock track', p, e); return null; }
+    }))).filter(Boolean);
+  } catch (e) {
+    stockError = location.protocol === 'file:' ? 'Stock tracks need the page served (see Help)' : 'Could not load the stock tracks';
+  }
+  buildTrackList();
+}
+
+// ---------------------------------------------------------------------------
+// Track files: save (download) and load (upload)
+// ---------------------------------------------------------------------------
+function showNote(text, btnText, onBtn, isErr) {
+  $('trackNoteText').textContent = text;
+  const b = $('trackNoteBtn');
+  b.hidden = !btnText; b.textContent = btnText || ''; b.onclick = onBtn || null;
+  $('trackNote').classList.toggle('err', !!isErr);
+  $('trackNote').classList.remove('hidden');
+}
+function hideNote() { $('trackNote').classList.add('hidden'); }
+
+function trackJson() {
+  const settings = {};
+  for (const k of TRACK_KEYS) settings[k] = structuredClone(S[k]);
+  return { format: TRACK_FORMAT, version: 1, title: S.title || basename(currentAudio).replace(/\.[^.]+$/, '') || 'Track',
+           audio: basename(currentAudio), settings };
+}
+function saveTrackJson() {
+  const j = trackJson();
+  const name = (j.title.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'track') + '.json';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(j, null, 2) + '\n'], { type: 'application/json' }));
+  a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  showNote(`Saved ${name}` + (j.audio ? ` (audio: ${j.audio}). Keep it next to the audio file.` : '. Open an audio file first so the track file names its audio.'));
+}
+
+// apply a loaded track file: to the audio already playing, to a stock track with the same audio, or ask for the audio
+function applyTrack(tr) {
+  const want = basename(tr.audio);
+  const title = tr.title || want || 'track';
+  if (want && currentAudio && want === basename(currentAudio)) {
+    S = withDefaults({ ...S, lanes: DEFAULT_LANES, ...tr.settings, title: tr.title || S.title });
+    syncInputs(); rebuild(); save(); refreshLoop();
+    if ($('ownTrack') && $('trackSel').value === 'own') setOwnTrackOption(S.title);
+    showNote(`Loaded “${title}” onto the current audio.`);
+    return;
+  }
+  const i = want ? STOCK.findIndex(t => basename(t.audio) === want) : -1;
+  if (i >= 0) { loadStock(i, tr); showNote(`Loaded “${title}”.`); return; }
+  pendingTrack = tr;
+  showNote(`Track file “${title}” is ready. Now choose its audio file${want ? ` (${want})` : ''}.`, '📂 Choose audio…', () => $('file').click());
+}
+async function openTrackFile(file) {
+  if (!file) return;
+  try { applyTrack(parseTrack(await file.text())); }
+  catch (e) { showNote(e.message, '', null, true); }
 }
 function setOwnTrackOption(name) {
   let opt = $('ownTrack');
@@ -732,23 +925,20 @@ function detailWindow() {
 }
 
 // Beat view is stacked into horizontal strips sharing one time axis.
-const STRIPS = [
-  { id: 'matra',   label: 'MATRA',         h: 22 },
-  { id: 'laya',    label: 'LAYA',          h: 16 },
-  { id: 'bandish', label: 'BANDISH',       h: 18 },
-  { id: 'samT',    label: '3-MATRA SAM TIHAI',     h: 18, short: 'SAM TIHAI' },
-  { id: 'bandT',   label: '3-MATRA BANDISH TIHAI', h: 18, short: 'BND TIHAI' },
-  { id: 'wave',    label: 'AUDIO',         h: 80 },
-];
+// MATRA and LAYA on top, then the user's lanes, then AUDIO.
 function stripLayout() {
-  const L = {};
+  const L = { list: [], lanes: [] };
   let y = 0;
-  for (const s of STRIPS) {
-    if (s.id === 'wave' && !S.showWave) continue;
-    L[s.id] = { y, h: s.h, label: s.label, short: s.short || s.label };
-    y += s.h;
-  }
-  L.H = y;
+  const add = (id, h, label, short, extra) => {
+    const s = { id, y, h, label, short: short || label, ...extra };
+    L.list.push(s); y += h;
+    return s;
+  };
+  L.matra = add('matra', 22, 'MATRA');
+  L.laya = add('laya', 16, 'LAYA');
+  S.lanes.forEach((l, i) => { const m = laneMeta(l); L.lanes.push(add('lane' + i, 18, m.label, m.short, { lane: l, meta: m })); });
+  if (S.showWave) L.wave = add('wave', 80, 'AUDIO');
+  L.H = Math.max(y, 1);
   return L;
 }
 
@@ -793,7 +983,7 @@ function drawDetail(t, b) {
   const bodyY = 0, bodyH = H;   // static vibhag/khali shading spans every strip
 
   // strip backgrounds
-  ctx.fillStyle = 'rgba(95,211,138,0.05)'; ctx.fillRect(0, L.bandish.y, W, L.bandish.h);
+  for (const s of L.lanes) if (s.lane.type === 'marker') { ctx.fillStyle = `rgba(${s.meta.rgb},0.05)`; ctx.fillRect(0, s.y, W, s.h); }
   ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(0, L.matra.y, W, L.matra.h);
   ctx.fillStyle = 'rgba(255,255,255,0.02)'; ctx.fillRect(0, L.laya.y, W, L.laya.h);
 
@@ -867,32 +1057,29 @@ function drawDetail(t, b) {
     }
   }
 
-  // BANDISH strip: a flag at the bandish matra of every avartan
-  ctx.font = '700 10px system-ui, sans-serif';
-  for (let k = k0; k <= k1; k++) {
-    if (!isBandishK(k)) continue;
-    const x = Math.round(X(timeOfK(k)));
-    ctx.fillStyle = 'rgba(95,211,138,0.22)';
-    ctx.fillRect(x, L.bandish.y + 2, Math.max(pxPerBeat, 4), L.bandish.h - 4);
-    ctx.fillStyle = '#5fd38a'; ctx.fillRect(x - 1, L.bandish.y, 3, L.bandish.h);
-    ctx.fillText('Bandish', x + 5, L.bandish.y + L.bandish.h / 2);
+  // lanes: marker flags, and tihais (three palas whose last matra lands on the target)
+  for (const s of L.lanes) {
+    const { rgb, name, isK } = s.meta;
+    if (s.lane.type === 'tihai') { drawTihai(ctx, s, X, k0, k1, isK, s.lane.pala, s.lane.gap, rgb, name); continue; }
+    ctx.font = '700 10px system-ui, sans-serif';
+    for (let k = k0; k <= k1; k++) {
+      if (!isK(k)) continue;
+      const x = Math.round(X(timeOfK(k)));
+      ctx.fillStyle = `rgba(${rgb},0.22)`;
+      ctx.fillRect(x, s.y + 2, Math.max(pxPerBeat, 4), s.h - 4);
+      ctx.fillStyle = `rgb(${rgb})`; ctx.fillRect(x - 1, s.y, 3, s.h);
+      ctx.fillText(s.lane.label || name, x + 5, s.y + s.h / 2);
+    }
   }
 
-  // SAM TIHAI / BANDISH TIHAI strips
-  // 3-matra tihais: three palas of 3 matras (a triplet each), no gap = 9 matras,
-  // the last matra of the third pala lands on sam / the bandish matra
-  drawTihai(ctx, L.samT, X, k0, k1, k => mod(k, taal.N) === 0, 3, 0, '255,90,54', 'Sam');
-  drawTihai(ctx, L.bandT, X, k0, k1, isBandishK, 3, 0, '95,211,138', 'Bandish');
-
   // strip separators + names
-  const ids = STRIPS.map(s => s.id).filter(id => L[id]);
   ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1; ctx.beginPath();
-  for (const id of ids.slice(1)) { ctx.moveTo(0, L[id].y + 0.5); ctx.lineTo(W, L[id].y + 0.5); }
+  for (const s of L.list.slice(1)) { ctx.moveTo(0, s.y + 0.5); ctx.lineTo(W, s.y + 0.5); }
   ctx.stroke();
   ctx.font = '700 8px system-ui, sans-serif';
   const narrow = W < 600;   // phones: short strip names so they hide fewer beats
-  for (const id of ids) {
-    const s = L[id], label = narrow ? s.short : s.label, tw = ctx.measureText(label).width;
+  for (const s of L.list) {
+    const label = narrow ? s.short : s.label, tw = ctx.measureText(label).width;
     ctx.fillStyle = 'rgba(16,13,10,0.8)'; ctx.fillRect(0, s.y + 1, tw + 8, 11);
     ctx.fillStyle = '#7d6d58'; ctx.fillText(label, 4, s.y + 7);
   }
@@ -1105,9 +1292,53 @@ function resyncSam() {
   setOffset(S.offset + (t - timeOfK(Math.round((t - S.offset) / avLen) * taal.N)));
 }
 
-function rebuild() { buildTaal(); renderTaal(); }
+function rebuild() { buildTaal(); renderTaal(); renderLanes(); }
+
+// ---------------------------------------------------------------------------
+// Lanes: editor + what each lane draws
+// ---------------------------------------------------------------------------
+function laneMeta(l) {
+  const N = taal.N, tg = l.type === 'marker' ? l.at : l.land;
+  let rgb, name, short, isK;
+  if (tg === 'sam') { rgb = '255,90,54'; name = 'Sam'; short = 'SAM'; isK = k => mod(k, N) === 0; }
+  else if (tg === 'bandish') { rgb = '95,211,138'; name = 'Bandish'; short = 'BND'; isK = isBandishK; }
+  else { const m = mod(tg - 1, N); rgb = '201,140,255'; name = 'Matra ' + tg; short = 'M' + tg; isK = k => mod(k, N) === m; }
+  const auto = l.type === 'marker' ? name.toUpperCase()
+    : `${l.pala}-MATRA ${name.toUpperCase()} TIHAI` + (l.gap ? ` · GAP ${l.gap}` : '');
+  const autoShort = l.type === 'marker' ? (tg === 'bandish' ? 'BANDISH' : short) : short + ' TIHAI';
+  return { rgb, name, isK, label: l.label ? l.label.toUpperCase() : auto, short: l.label ? l.label.toUpperCase() : autoShort, auto };
+}
+function renderLanes() {
+  const N = taal.N;
+  const opts = v => `<option value="sam"${v === 'sam' ? ' selected' : ''}>Sam</option>` +
+    `<option value="bandish"${v === 'bandish' ? ' selected' : ''}>Bandish</option>` +
+    Array.from({ length: N }, (_, i) => `<option value="${i + 1}"${v === i + 1 ? ' selected' : ''}>Matra ${i + 1}</option>`).join('') +
+    (typeof v === 'number' && v > N ? `<option value="${v}" selected>Matra ${v}</option>` : '');
+  $('laneList').innerHTML = S.lanes.map((l, i) => {
+    const m = laneMeta(l);
+    const name = `<input class="lname" data-k="label" value="${esc(l.label || '')}" placeholder="${esc(m.auto.toLowerCase())}" title="Lane name (empty = automatic)">`;
+    const del = `<button class="del" data-del title="Delete this lane">✕</button>`;
+    const body = l.type === 'marker'
+      ? `<span class="kind">Marker</span> at <select data-k="at" title="Matra to flag in every avartan">${opts(l.at)}</select>`
+      : `<span class="kind">Tihai</span>` +
+        `<input type="number" data-k="pala" min="1" max="32" value="${l.pala}" title="Matras per pala"> × 3, gap ` +
+        `<input type="number" data-k="gap" min="0" max="32" value="${l.gap}" title="Matras between palas"> on ` +
+        `<select data-k="land" title="Matra the tihai lands on">${opts(l.land)}</select>`;
+    return `<div class="lane" data-i="${i}" style="--rgb:${m.rgb};--c:rgb(${m.rgb})">${body}${name}${del}</div>`;
+  }).join('') || '<span class="muted">No lanes. Add one:</span>';
+}
+function setLane(i, k, v) {
+  const l = S.lanes[i];
+  if (!l) return;
+  if (k === 'at' || k === 'land') l[k] = laneTarget(v);
+  else if (k === 'pala') l.pala = clampInt(v, 1, 32, 3);
+  else if (k === 'gap') l.gap = clampInt(v, 0, 32, 0);
+  else if (k === 'label') { v = String(v).trim().slice(0, 40); if (v) l.label = v; else delete l.label; }
+  save();
+}
 
 function syncInputs() {
+  $('trackTitle').value = S.title || '';
   $('taalSel').value = S.taal;
   $('bpm').value = S.bpm;
   $('offset').value = S.offset;
@@ -1163,11 +1394,33 @@ $('winAv').addEventListener('change', e => { S.winAv = Number(e.target.value); s
 
 $('openBtn').addEventListener('click', () => $('file').click());
 $('file').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
+$('jsonFile').addEventListener('change', e => { openTrackFile(e.target.files[0]); e.target.value = ''; });
+$('loadJsonBtn').addEventListener('click', () => $('jsonFile').click());
+$('saveJsonBtn').addEventListener('click', saveTrackJson);
+$('trackNoteClose').addEventListener('click', () => { hideNote(); pendingTrack = null; });
+$('trackTitle').addEventListener('input', e => { S.title = e.target.value.slice(0, 120); save(); });
+// lane editor: edits update the beat view live; changing a lane's target or numbers re-labels it
+$('laneList').addEventListener('input', e => {
+  const row = e.target.closest('.lane'); if (!row || !e.target.dataset.k) return;
+  if (e.target.dataset.k === 'label') setLane(Number(row.dataset.i), 'label', e.target.value);
+});
+$('laneList').addEventListener('change', e => {
+  const row = e.target.closest('.lane'); if (!row || !e.target.dataset.k) return;
+  setLane(Number(row.dataset.i), e.target.dataset.k, e.target.value);
+  renderLanes();
+});
+$('laneList').addEventListener('click', e => {
+  if (!e.target.closest('[data-del]')) return;
+  S.lanes.splice(Number(e.target.closest('.lane').dataset.i), 1); renderLanes(); save();
+});
+$('addMarker').addEventListener('click', () => { S.lanes.push({ type: 'marker', at: 'bandish' }); renderLanes(); save(); });
+$('addTihai').addEventListener('click', () => { S.lanes.push({ type: 'tihai', pala: 3, gap: 0, land: 'sam' }); renderLanes(); save(); });
 let trackValue = '';   // the current track, to restore when "Open a file…" is cancelled
 $('trackSel').addEventListener('focus', e => trackValue = e.target.value);
 $('trackSel').addEventListener('change', e => {
   const v = e.target.value;
   if (v === 'open') { e.target.value = trackValue; $('file').click(); }
+  else if (v === 'openJson') { e.target.value = trackValue; $('jsonFile').click(); }
   else if (v.startsWith('stock:')) loadStock(Number(v.slice(6)));
   e.target.blur();   // keep Space and the other shortcuts working
 });
@@ -1211,10 +1464,16 @@ let dragDepth = 0;
 window.addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; document.body.classList.add('dragging'); });
 window.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
 window.addEventListener('dragover', e => e.preventDefault());
-window.addEventListener('drop', e => {
+window.addEventListener('drop', async e => {
   e.preventDefault(); dragDepth = 0; document.body.classList.remove('dragging');
-  const f = [...e.dataTransfer.files].find(f => f.type.startsWith('audio') || /\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(f.name));
-  loadFile(f);
+  const files = [...e.dataTransfer.files];
+  const f = files.find(f => f.type.startsWith('audio') || /\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(f.name));
+  const jf = files.find(f => /\.json$/i.test(f.name) || f.type === 'application/json');
+  if (!jf) return loadFile(f);
+  // a track file dropped together with its audio: load the audio with the file's settings
+  let tr;
+  try { tr = parseTrack(await jf.text()); } catch (err) { return showNote(err.message, '', null, true); }
+  if (f) { pendingTrack = tr; loadFile(f); } else applyTrack(tr);
 });
 
 // help dialog
@@ -1262,11 +1521,11 @@ rebuild();
 buildTrackList();
 requestAnimationFrame(frame);
 // start with the stock track used last time (or the first one); the user's own files can't be reopened automatically
-{
+loadStockList().then(() => {
   const lastTrack = load('taal:lastTrack');
-  const i = STOCK.findIndex(t => t.file === lastTrack);
+  const i = STOCK.findIndex(t => basename(t.audio) === lastTrack);
   if (i >= 0 || (lastTrack === null && localStorage.getItem('taal:lastTrack') === null && STOCK.length)) loadStock(Math.max(i, 0));
-}
+});
 </script>
 </body>
 </html>
