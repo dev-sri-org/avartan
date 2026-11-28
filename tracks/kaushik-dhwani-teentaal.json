@@ -5,10 +5,18 @@
   "audio": "Kaushik_Dhwani_Teen_Taal.mp3",
   "settings": {
     "taal": "teentaal",
+    "custom": {
+      "vibhags": "4+4+4+4",
+      "marks": "X 2 0 3",
+      "bols": ""
+    },
     "bpm": 80,
+    "targetBpm": null,
     "offset": 0,
     "bMatra": 1,
     "subdiv": 1,
+    "clickMode": "off",
+    "repeat": true,
     "lanes": [
       {
         "type": "marker",

@@ -5,10 +5,18 @@
   "audio": "Kaushik_Dhwani_Vilambit_Ektal.mp3",
   "settings": {
     "taal": "vilambitektaal",
+    "custom": {
+      "vibhags": "4+4+4+4",
+      "marks": "X 2 0 3",
+      "bols": ""
+    },
     "bpm": 15,
+    "targetBpm": null,
     "offset": 0,
     "bMatra": 1,
     "subdiv": 4,
+    "clickMode": "off",
+    "repeat": true,
     "lanes": [
       {
         "type": "marker",

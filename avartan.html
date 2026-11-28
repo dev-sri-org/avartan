@@ -509,7 +509,7 @@ const TAALS = {
 // ---------------------------------------------------------------------------
 const TRACK_FORMAT = 'avartan-track';
 // the settings that belong to a track (view preferences such as volume stay in the browser)
-const TRACK_KEYS = ['taal', 'custom', 'bpm', 'targetBpm', 'offset', 'bMatra', 'subdiv', 'clickMode', 'winAv', 'repeat', 'lanes'];
+const TRACK_KEYS = ['taal', 'custom', 'bpm', 'targetBpm', 'offset', 'bMatra', 'subdiv', 'clickMode', 'repeat', 'lanes'];
 // Lanes: extra strips in the beat view, between LAYA and AUDIO.
 //   marker: { type: 'marker', at, label? }              flags one matra every avartan
 //   tihai:  { type: 'tihai', pala, gap, land, label? }  three palas of `pala` matras, `gap` apart, landing on `land`
@@ -545,7 +545,7 @@ function parseTrack(text) {
   const settings = {};
   for (const k of TRACK_KEYS) if (j.settings[k] !== undefined) settings[k] = j.settings[k];
   if (settings.taal !== undefined && !TAALS[settings.taal]) delete settings.taal;
-  for (const k of ['bpm', 'offset', 'bMatra', 'subdiv', 'winAv'])
+  for (const k of ['bpm', 'offset', 'bMatra', 'subdiv'])
     if (settings[k] !== undefined && !Number.isFinite(Number(settings[k]))) delete settings[k]; else if (settings[k] !== undefined) settings[k] = Number(settings[k]);
   if (settings.bpm !== undefined && !(settings.bpm > 0)) delete settings.bpm;
   if (settings.targetBpm !== undefined && settings.targetBpm !== null && !(Number(settings.targetBpm) > 0)) delete settings.targetBpm;
